@@ -9,9 +9,6 @@ import java.lang.Exception
 import java.lang.StringBuilder
 import java.util.*
 
-/**
- * @author QBW
- */
 class Log {
     private var mEnabled = false
     private var mLogDirPath: String? = null
