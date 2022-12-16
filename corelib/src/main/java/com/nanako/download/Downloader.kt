@@ -18,15 +18,15 @@ import java.util.ArrayList
 import com.nanako.log.Log.Companion.LOG
 
 class Downloader private constructor(private val mContext: Context) {
-    private val mListeners: MutableList<Listener> = ArrayList()
-    private val mUiHandler = Handler()
-    private val mBackHandler: Handler
-    private lateinit var mDownloadManager: DownloadManager
-    private val mTasks: MutableList<Task> = ArrayList()
+    private val listeners: MutableList<Listener> = ArrayList()
+    private val uiHandler = Handler()
+    private val backHandler: Handler
+    private lateinit var downloadManager: DownloadManager
+    private val tasks: MutableList<Task> = ArrayList()
 
     fun addTask(task: Task) {
-        mBackHandler.post {
-            synchronized(mTasks) {
+        backHandler.post {
+            synchronized(tasks) {
                 if (!hasTask(task.downloadUrl)) {
                     try {
                         doAddTask(task)
@@ -40,7 +40,7 @@ class Downloader private constructor(private val mContext: Context) {
     }
 
     fun hasTask(downloadUrl: String): Boolean {
-        for (task in mTasks) {
+        for (task in tasks) {
             if (task.downloadUrl == downloadUrl) {
                 return true
             }
@@ -82,22 +82,22 @@ class Downloader private constructor(private val mContext: Context) {
         } else {
             request.setDestinationInExternalFilesDir(mContext, task.dirType, subPath)
         }
-        task.downloadId = mDownloadManager.enqueue(request)
-        mTasks.add(task)
+        task.downloadId = downloadManager.enqueue(request)
+        tasks.add(task)
         LOG.d("add download task：${Task.toString(mContext, task)}")
         checkMonitorDownloadStatus()
     }
 
     fun removeTask(task: Task, removeFile: Boolean) {
-        mBackHandler.post { synchronized(mTasks) { doRemoveTask(task, removeFile) } }
+        backHandler.post { synchronized(tasks) { doRemoveTask(task, removeFile) } }
     }
 
     private fun doRemoveTask(task: Task, removeFile: Boolean) {
-        for (t in mTasks) {
+        for (t in tasks) {
             if (t.downloadId == task.downloadId) {
-                mTasks.remove(t)
+                tasks.remove(t)
                 if (removeFile) {
-                    mDownloadManager.remove(t.downloadId)
+                    downloadManager.remove(t.downloadId)
                 }
                 LOG.d("remove download task：${Task.toString(mContext, t)}")
                 break
@@ -106,22 +106,22 @@ class Downloader private constructor(private val mContext: Context) {
     }
 
     private fun checkMonitorDownloadStatus() {
-        mBackHandler.removeCallbacks(mCheckDownloadStatusRunn)
-        if (mTasks.isEmpty()) {
+        backHandler.removeCallbacks(mCheckDownloadStatusRunn)
+        if (tasks.isEmpty()) {
             LOG.w("no download task exist, not loop check downlaod status")
         } else {
-            mBackHandler.postDelayed(mCheckDownloadStatusRunn, 1000)
+            backHandler.postDelayed(mCheckDownloadStatusRunn, 1000)
         }
     }
 
     private val mCheckDownloadStatusRunn = Runnable {
-        synchronized(mTasks) {
+        synchronized(tasks) {
             val tasksSuccess: MutableList<Task> = ArrayList()
             val tasksFailed: MutableList<Task> = ArrayList()
             val query = DownloadManager.Query()
-            for (task in mTasks) {
+            for (task in tasks) {
                 query.setFilterById(task.downloadId)
-                val cursor = mDownloadManager.query(query)
+                val cursor = downloadManager.query(query)
                 if (cursor.moveToFirst()) {
                     val status =
                         cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
@@ -225,8 +225,8 @@ class Downloader private constructor(private val mContext: Context) {
     init {
         val thread = HandlerThread("xdownloader")
         thread.start()
-        mBackHandler = Handler(thread.looper)
-        mDownloadManager = mContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        backHandler = Handler(thread.looper)
+        downloadManager = mContext.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     }
 
     class Task(
@@ -326,23 +326,23 @@ class Downloader private constructor(private val mContext: Context) {
     }
 
     fun addListener(listener: Listener) {
-        synchronized(mListeners) {
-            if (!mListeners.contains(listener)) {
-                mListeners.add(listener)
+        synchronized(listeners) {
+            if (!listeners.contains(listener)) {
+                listeners.add(listener)
             }
         }
     }
 
     fun removeListener(listener: Listener) {
-        synchronized(mListeners) { mListeners.remove(listener) }
+        synchronized(listeners) { listeners.remove(listener) }
     }
 
     private fun notifyListener(status: Status) {
-        mUiHandler.post {
-            synchronized(mListeners) {
-                val s = mListeners.size
+        uiHandler.post {
+            synchronized(listeners) {
+                val s = listeners.size
                 for (i in 0 until s) {
-                    if (mListeners[i].onDownload(status)) {
+                    if (listeners[i].onDownload(status)) {
                         break
                     }
                 }
