@@ -1,4 +1,4 @@
-package com.nanako.expandableadapterx
+package com.nanako.expandableadapter
 
 import com.nanako.log.Log
 import java.util.*

@@ -7,7 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.app.expandableadapterx.databinding.FragmentFirstBinding
-import com.nanako.expandableadapterx.ExpandableAdapter
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.

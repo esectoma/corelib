@@ -1,4 +1,4 @@
-package com.nanako.expandableadapterx
+package com.nanako.expandableadapter
 
 import androidx.recyclerview.widget.RecyclerView
 
