@@ -13,172 +13,165 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nanako.http;
+package com.nanako.http
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collection;
+import okhttp3.OkHttpClient.Builder
+import okhttp3.ConnectionSpec
+import com.nanako.http.CustomTrust
+import com.nanako.http.HttpTask
+import java.io.IOException
+import java.io.InputStream
+import java.lang.AssertionError
+import java.lang.Exception
+import java.security.*
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.*
+import javax.net.ssl.*
+import kotlin.Throws
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
-import okhttp3.CertificatePinner;
-import okhttp3.ConnectionSpec;
-import okhttp3.OkHttpClient;
-
-public final class CustomTrust {
-
-    protected static void setTrust(OkHttpClient.Builder builder, InputStream inputStream) {
+object CustomTrust {
+    @JvmStatic
+    fun setTrust(builder: Builder, inputStream: InputStream) {
         try {
-            builder.connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS,
-                    ConnectionSpec.CLEARTEXT));
-            X509TrustManager trustManager = trustManagerForCertificates(inputStream);
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, new TrustManager[]{trustManager}, null);
-            SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-            builder.sslSocketFactory(sslSocketFactory, trustManager);
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String s, SSLSession sslSession) {
-                    HttpTask.sLog.d("hostname[%s]");
-                    return true;
-                }
-            });
-            inputStream.close();
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            HttpTask.sLog.e(e);
-        } catch (IOException e) {
-            e.printStackTrace();
-            HttpTask.sLog.e(e);
-        } catch (Exception e) {
-            e.printStackTrace();
-            HttpTask.sLog.e(e);
+            builder.connectionSpecs(
+                Arrays.asList(
+                    ConnectionSpec.MODERN_TLS,
+                    ConnectionSpec.CLEARTEXT
+                )
+            )
+            val trustManager = trustManagerForCertificates(inputStream)
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, arrayOf<TrustManager>(trustManager), null)
+            val sslSocketFactory = sslContext.socketFactory
+            builder.sslSocketFactory(sslSocketFactory, trustManager)
+            builder.hostnameVerifier(HostnameVerifier { s, sslSession ->
+                HttpTask.sLog.d("hostname[%s]")
+                true
+            })
+            inputStream.close()
+        } catch (e: GeneralSecurityException) {
+            e.printStackTrace()
+            HttpTask.sLog.e(e)
+        } catch (e: IOException) {
+            e.printStackTrace()
+            HttpTask.sLog.e(e)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            HttpTask.sLog.e(e)
         }
     }
 
-
     /**
-     * Returns a trust manager that trusts {@code certificates} and none other. HTTPS services whose
-     * certificates have not been signed by these certificates will fail with a {@code
-     * SSLHandshakeException}.
-     * <p>
-     * <p>This can be used to replace the host platform's built-in trusted certificates with a
+     * Returns a trust manager that trusts `certificates` and none other. HTTPS services whose
+     * certificates have not been signed by these certificates will fail with a `SSLHandshakeException`.
+     *
+     *
+     *
+     * This can be used to replace the host platform's built-in trusted certificates with a
      * custom
      * set. This is useful in development where certificate authority-trusted certificates aren't
      * available. Or in production, to avoid reliance on third-party certificate authorities.
-     * <p>
-     * <p>See also {@link CertificatePinner}, which can limit trusted certificates while still using
+     *
+     *
+     *
+     * See also [CertificatePinner], which can limit trusted certificates while still using
      * the host platform's built-in trust store.
-     * <p>
+     *
+     *
      * <h3>Warning: Customizing Trusted Certificates is Dangerous!</h3>
-     * <p>
-     * <p>Relying on your own trusted certificates limits your server team's ability to update their
+     *
+     *
+     *
+     * Relying on your own trusted certificates limits your server team's ability to update their
      * TLS certificates. By installing a specific set of trusted certificates, you take on
      * additional
      * operational complexity and limit your ability to migrate between certificate authorities. Do
      * not use custom trusted certificates in production without the blessing of your server's TLS
      * administrator.
      */
-    private static X509TrustManager trustManagerForCertificates(InputStream in)
-            throws GeneralSecurityException {
-        CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-        Collection<? extends Certificate> certificates =
-                certificateFactory.generateCertificates(in);
-        if (certificates.isEmpty()) {
-            throw new IllegalArgumentException("expected non-empty set of trusted certificates");
-        }
+    @Throws(GeneralSecurityException::class)
+    private fun trustManagerForCertificates(`in`: InputStream): X509TrustManager {
+        val certificateFactory = CertificateFactory.getInstance("X.509")
+        val certificates = certificateFactory.generateCertificates(`in`)
+        require(!certificates.isEmpty()) { "expected non-empty set of trusted certificates" }
 
         // Put the certificates a key store.
-        char[] password = "password".toCharArray(); // Any password will work.
-        KeyStore keyStore = newEmptyKeyStore(password);
-        int index = 0;
-        for (Certificate certificate : certificates) {
-            String certificateAlias = Integer.toString(index++);
-            HttpTask.sLog.d("[$certificateAlias:${certificate.getPublicKey().getAlgorithm()}]");
-            keyStore.setCertificateEntry(certificateAlias, certificate);
+        val password = "password".toCharArray() // Any password will work.
+        val keyStore = newEmptyKeyStore(password)
+        var index = 0
+        for (certificate in certificates) {
+            val certificateAlias = Integer.toString(index++)
+            HttpTask.sLog.d("[\$certificateAlias:\${certificate.getPublicKey().getAlgorithm()}]")
+            keyStore.setCertificateEntry(certificateAlias, certificate)
         }
 
         // Use it to build an X509 trust manager.
-        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(
-                KeyManagerFactory.getDefaultAlgorithm());
-        keyManagerFactory.init(keyStore, password);
-        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(
-                TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(keyStore);
-        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
-        if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
-            throw new IllegalStateException("Unexpected default trust managers:"
-                    + Arrays.toString(trustManagers));
+        val keyManagerFactory = KeyManagerFactory.getInstance(
+            KeyManagerFactory.getDefaultAlgorithm()
+        )
+        keyManagerFactory.init(keyStore, password)
+        val trustManagerFactory = TrustManagerFactory.getInstance(
+            TrustManagerFactory.getDefaultAlgorithm()
+        )
+        trustManagerFactory.init(keyStore)
+        val trustManagers = trustManagerFactory.trustManagers
+        check(!(trustManagers.size != 1 || trustManagers[0] !is X509TrustManager)) {
+            ("Unexpected default trust managers:"
+                    + Arrays.toString(trustManagers))
         }
-        return (X509TrustManager) trustManagers[0];
+        return trustManagers[0] as X509TrustManager
     }
 
-    private static KeyStore newEmptyKeyStore(char[] password) throws GeneralSecurityException {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            InputStream in = null; // By convention, 'null' creates an empty key store.
-            keyStore.load(in, password);
-            return keyStore;
-        } catch (IOException e) {
-            throw new AssertionError(e);
+    @Throws(GeneralSecurityException::class)
+    private fun newEmptyKeyStore(password: CharArray): KeyStore {
+        return try {
+            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+            val `in`: InputStream? = null // By convention, 'null' creates an empty key store.
+            keyStore.load(`in`, password)
+            keyStore
+        } catch (e: IOException) {
+            throw AssertionError(e)
         }
     }
 
-    protected static void trustAllCerts(OkHttpClient.Builder builder) {
-        final X509TrustManager[] trustAllCerts = new X509TrustManager[]{
-                new X509TrustManager() {
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain,
-                                                   String authType) {
-                    }
-
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain,
-                                                   String authType) {
-                    }
-
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return new X509Certificate[]{};
-                    }
+    @JvmStatic
+    fun trustAllCerts(builder: Builder) {
+        val trustAllCerts = arrayOf<X509TrustManager>(
+            object : X509TrustManager {
+                override fun checkClientTrusted(
+                    chain: Array<X509Certificate>,
+                    authType: String
+                ) {
                 }
-        };
+
+                override fun checkServerTrusted(
+                    chain: Array<X509Certificate>,
+                    authType: String
+                ) {
+                }
+
+                override fun getAcceptedIssuers(): Array<X509Certificate> {
+                    return arrayOf()
+                }
+            }
+        )
 
         // Install the all-trusting trust manager
         try {
-            SSLContext sslContext = SSLContext.getInstance("SSL");
-            sslContext.init(null, trustAllCerts, new SecureRandom());
+            val sslContext = SSLContext.getInstance("SSL")
+            sslContext.init(null, trustAllCerts, SecureRandom())
             // Create an ssl socket factory with our all-trusting manager
-            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-            builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0]);
-            builder.hostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String hostname, SSLSession session) {
-                    HttpTask.sLog.d("hostname[%s]");
-                    return true;
-                }
-            });
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (KeyManagementException e) {
-            e.printStackTrace();
+            val sslSocketFactory = sslContext.socketFactory
+            builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0])
+            builder.hostnameVerifier(HostnameVerifier { hostname, session ->
+                HttpTask.sLog.d("hostname[%s]")
+                true
+            })
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
+        } catch (e: KeyManagementException) {
+            e.printStackTrace()
         }
     }
 }

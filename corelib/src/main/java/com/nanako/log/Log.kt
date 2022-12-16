@@ -95,23 +95,23 @@ class Log {
         if (mEnabled) log('e', createLog(jsonLog(message), 5))
     }
 
-    fun urlV(url: String, mapParam: Map<String?, Any?>?) {
+    fun urlV(url: String, mapParam: Map<String, Any>) {
         if (mEnabled) l('v', urlLog(url, mapParam))
     }
 
-    fun urlD(url: String, mapParam: Map<String?, Any?>?) {
+    fun urlD(url: String, mapParam: Map<String, Any>) {
         if (mEnabled) l('d', urlLog(url, mapParam))
     }
 
-    fun urlI(url: String, mapParam: Map<String?, Any?>?) {
+    fun urlI(url: String, mapParam: Map<String, Any>) {
         if (mEnabled) l('i', urlLog(url, mapParam))
     }
 
-    fun urlW(url: String, mapParam: Map<String?, Any?>?) {
+    fun urlW(url: String, mapParam: Map<String, Any>) {
         if (mEnabled) l('w', urlLog(url, mapParam))
     }
 
-    fun urlE(url: String, mapParam: Map<String?, Any?>?) {
+    fun urlE(url: String, mapParam: Map<String, Any>) {
         if (mEnabled) l('e', urlLog(url, mapParam))
     }
 
@@ -243,14 +243,14 @@ class Log {
         return ""
     }
 
-    fun urlLog(url: String, mapParam: Map<String?, Any?>?): String {
+    fun urlLog(url: String, mapParam: Map<String, Any>): String {
         var url = url
         if (!mEnabled) {
             return ""
         }
         val stringBuilder = StringBuilder()
         stringBuilder.append("$url?")
-        if (null != mapParam && !mapParam.isEmpty()) {
+        if (!mapParam.isEmpty()) {
             val entrySet = mapParam.entries
             for ((key, value) in entrySet) {
                 stringBuilder.append(key.toString() + "=" + value + "&")
