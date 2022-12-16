@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
-        Log.instance.isEnabled = true
-        Log.instance.i("aabc")
+        Log.LOG.isEnabled = true
+        Log.LOG.i("aabc")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

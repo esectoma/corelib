@@ -1,72 +1,76 @@
-package com.nanako.statusbar;
+package com.nanako.statusbar
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.util.AttributeSet;
-import android.view.View;
-
-import com.nanako.R;
+import android.content.Context
+import android.util.AttributeSet
+import android.view.View
+import com.nanako.R
+import com.nanako.statusbar.StatusBarPlaceHolderView
 
 /**
  * Author：qbw on 2019/3/22 17:16
  */
-public class StatusBarPlaceHolderView extends View {
+class StatusBarPlaceHolderView : View {
+    private var extraHeight = 0
 
-    private int extraHeight;
-
-    public StatusBarPlaceHolderView(Context context) {
-        super(context);
-        init(context, null);
+    constructor(context: Context) : super(context) {
+        init(context, null)
     }
 
-    public StatusBarPlaceHolderView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(context, attrs);
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
+        init(context, attrs)
     }
 
-    public StatusBarPlaceHolderView(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(context, attrs);
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    ) {
+        init(context, attrs)
     }
 
-    private void init(Context context, AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs,
-                                                               R.styleable.StatusBarPlaceHolderView);
-        extraHeight = (int) typedArray.getDimension(R.styleable.StatusBarPlaceHolderView_sb_extra_height,
-                                                    0);
-        typedArray.recycle();
+    private fun init(context: Context, attrs: AttributeSet?) {
+        val typedArray = context.obtainStyledAttributes(
+            attrs,
+            R.styleable.StatusBarPlaceHolderView
+        )
+        extraHeight =
+            typedArray.getDimension(R.styleable.StatusBarPlaceHolderView_sb_extra_height, 0f)
+                .toInt()
+        typedArray.recycle()
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int sh = getStatusHeight(getContext());
-        super.onMeasure(widthMeasureSpec,
-                        MeasureSpec.makeMeasureSpec(sh + extraHeight, MeasureSpec.EXACTLY));
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val sh = getStatusHeight(context)
+        super.onMeasure(
+            widthMeasureSpec,
+            MeasureSpec.makeMeasureSpec(sh + extraHeight, MeasureSpec.EXACTLY)
+        )
     }
 
-    public static int getStatusHeight(Context context) {
-        int statusHeight = (int) dp2px(context, 24);
-        try {
-            Class<?> clazz = Class.forName("com.android.internal.R$dimen");
-            Object object = clazz.newInstance();
-            int height = Integer.parseInt(clazz.getField("status_bar_height")
-                                               .get(object)
-                                               .toString());
-            statusHeight = context.getResources().getDimensionPixelSize(height);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+    companion object {
+        fun getStatusHeight(context: Context): Int {
+            var statusHeight = dp2px(context, 24f).toInt()
+            try {
+                val clazz = Class.forName("com.android.internal.R\$dimen")
+                val `object` = clazz.newInstance()
+                val height = clazz.getField("status_bar_height")[`object`]
+                    .toString().toInt()
+                statusHeight = context.resources.getDimensionPixelSize(height)
+            } catch (e: ClassNotFoundException) {
+                e.printStackTrace()
+            } catch (e: InstantiationException) {
+                e.printStackTrace()
+            } catch (e: IllegalAccessException) {
+                e.printStackTrace()
+            } catch (e: NoSuchFieldException) {
+                e.printStackTrace()
+            }
+            return statusHeight
         }
-        return statusHeight;
-    }
 
-    public static float dp2px(Context context, float dp) {
-        final float scale = context.getResources().getDisplayMetrics().density;
-        return dp * scale + 0.5f;
+        fun dp2px(context: Context, dp: Float): Float {
+            val scale = context.resources.displayMetrics.density
+            return dp * scale + 0.5f
+        }
     }
 }
