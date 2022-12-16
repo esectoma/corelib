@@ -10,6 +10,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
 import com.app.expandableadapterx.databinding.ActivityMainBinding
+import com.nanako.log.Log
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
+        Log.instance.isEnabled = true
+        Log.instance.i("aabc")
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
