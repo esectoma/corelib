@@ -1,62 +1,63 @@
-package com.nanako.encryption;
+package com.nanako.encryption
 
-import android.util.Log;
+import android.util.Log
+import com.nanako.encryption.AESUtil.SecretLen
+import com.nanako.encryption.Base64Util
+import com.nanako.encryption.AESUtil
+import com.nanako.encryption.Constant.CipherMode
+import com.nanako.encryption.MD5Util
+import kotlin.jvm.JvmOverloads
+import com.nanako.encryption.StringUtil
+import java.util.*
 
-import java.util.HashMap;
+object StringUtil {
+    @JvmOverloads
+    fun byteToHexString(bytes: ByteArray, isUpperase: Boolean = true): String {
+        val sbytes = StringBuffer()
+        for (b in bytes) {
+            sbytes.append(String.format(if (isUpperase) "%02X" else "%02x", b))
+        }
+        return sbytes.toString()
+    }
 
-public class StringUtil {
+    fun hexStringToByte(hexString: String): ByteArray? {
+        var hexString = hexString
+        val mapHexToDec = initHexToDec()
+        hexString = hexString.uppercase(Locale.getDefault())
+        val hexStringLength = hexString.length
+        if (hexStringLength % 2 != 0) {
+            Log.i("", String.format("wrong hexString[%s]", hexString))
+            return null
+        }
+        val bytesLength = hexStringLength / 2
+        val bytes = ByteArray(bytesLength)
+        for (i in 0 until bytesLength) {
+            val p = mapHexToDec[hexString[2 * i]]
+            val b = mapHexToDec[hexString[2 * i + 1]]
+            val bt = (p!! shl 4 or b!!).toByte()
+            bytes[i] = bt
+        }
+        return bytes
+    }
 
-	public static String byteToHexString(byte[] bytes) {
-		return byteToHexString(bytes, true);
-	}
-
-	public static String byteToHexString(byte[] bytes, boolean isUpperase) {
-		StringBuffer sbytes = new StringBuffer();
-		for (byte b : bytes) {
-			sbytes.append(String.format(isUpperase ? "%02X" : "%02x", b));
-		}
-		return sbytes.toString();
-	}
-
-	public static byte[] hexStringToByte(String hexString) {
-		HashMap<Character, Integer> mapHexToDec = initHexToDec();
-		hexString = hexString.toUpperCase();
-		int hexStringLength = hexString.length();
-		if (hexStringLength % 2 != 0) {
-			Log.i("", String.format("wrong hexString[%s]", hexString));
-			return null;
-		}
-
-		int bytesLength = hexStringLength / 2;
-		byte[] bytes = new byte[bytesLength];
-		for (int i = 0; i < bytesLength; i++) {
-			Integer p = mapHexToDec.get(hexString.charAt(2 * i));
-			Integer b = mapHexToDec.get(hexString.charAt(2 * i + 1));
-			byte bt = (byte) (p << 4 | b);
-			bytes[i] = bt;
-		}
-
-		return bytes;
-	}
-
-	private static HashMap<Character, Integer> initHexToDec() {
-		HashMap<Character, Integer> mapHexToDec = new HashMap<Character, Integer>();
-		mapHexToDec.put('0', 0);
-		mapHexToDec.put('1', 1);
-		mapHexToDec.put('2', 2);
-		mapHexToDec.put('3', 3);
-		mapHexToDec.put('4', 4);
-		mapHexToDec.put('5', 5);
-		mapHexToDec.put('6', 6);
-		mapHexToDec.put('7', 7);
-		mapHexToDec.put('8', 8);
-		mapHexToDec.put('9', 9);
-		mapHexToDec.put('A', 10);
-		mapHexToDec.put('B', 11);
-		mapHexToDec.put('C', 12);
-		mapHexToDec.put('D', 13);
-		mapHexToDec.put('E', 14);
-		mapHexToDec.put('F', 15);
-		return mapHexToDec;
-	}
+    private fun initHexToDec(): HashMap<Char, Int> {
+        val mapHexToDec = HashMap<Char, Int>()
+        mapHexToDec['0'] = 0
+        mapHexToDec['1'] = 1
+        mapHexToDec['2'] = 2
+        mapHexToDec['3'] = 3
+        mapHexToDec['4'] = 4
+        mapHexToDec['5'] = 5
+        mapHexToDec['6'] = 6
+        mapHexToDec['7'] = 7
+        mapHexToDec['8'] = 8
+        mapHexToDec['9'] = 9
+        mapHexToDec['A'] = 10
+        mapHexToDec['B'] = 11
+        mapHexToDec['C'] = 12
+        mapHexToDec['D'] = 13
+        mapHexToDec['E'] = 14
+        mapHexToDec['F'] = 15
+        return mapHexToDec
+    }
 }

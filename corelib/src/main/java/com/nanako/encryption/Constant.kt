@@ -1,23 +1,31 @@
-package com.nanako.encryption;
+package com.nanako.encryption
 
-public class Constant {
-	public static class CipherMode {
-		public static final String AES_CBC_PKCS5Padding = new String("AES/CBC/PKCS5Padding");
-	}
-	
-	public static class Algorithm {
-		public static final String AES = new String("AES");
-		public static final String MD5 = new String("MD5");
-		public static final String SHA1PRNG = new String("SHA1PRNG");
-		public static final String RSA = new String("RSA");
-		public static final String RSA_CIPHER = new String("RSA/ECB/PKCS1Padding");
-	}
-	
-	public static class Charset {
-		public static final String UTF_8 = new String("UTF-8");
-	}
+import com.nanako.encryption.AESUtil.SecretLen
+import com.nanako.encryption.Base64Util
+import com.nanako.encryption.AESUtil
+import com.nanako.encryption.Constant.CipherMode
+import com.nanako.encryption.MD5Util
+import kotlin.jvm.JvmOverloads
+import com.nanako.encryption.StringUtil
 
-	public static class Provider {
-		public static final String CRYPTO = "Crypto";
-	}
+class Constant {
+    object CipherMode {
+        val AES_CBC_PKCS5Padding = "AES/CBC/PKCS5Padding"
+    }
+
+    object Algorithm {
+        val AES: String = "AES"
+        val MD5: String = "MD5"
+        val SHA1PRNG: String = "SHA1PRNG"
+        val RSA: String = "RSA"
+        val RSA_CIPHER: String = "RSA/ECB/PKCS1Padding"
+    }
+
+    object Charset {
+        val UTF_8: String = "UTF-8"
+    }
+
+    object Provider {
+        const val CRYPTO = "Crypto"
+    }
 }
