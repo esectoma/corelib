@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="tb_status_height">24dp</dimen>
+    <dimen name="tb_title_height">40dp</dimen>
+</resources>

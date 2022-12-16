@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="TitleBar">
+        <attr name="tb_status_visible" format="boolean" />
+        <attr name="tb_status_background" format="reference" />
+        <attr name="tb_status_height" format="dimension" />
+        <attr name="tb_backgroupd" format="reference" />
+        <attr name="tb_title" format="string" />
+        <attr name="tb_title_height" format="dimension" />
+        <attr name="tb_title_color" format="color" />
+        <attr name="tb_title_visible" format="boolean" />
+        <attr name="tb_title_bold" format="boolean" />
+        <attr name="tb_title_textsize" format="dimension" />
+        <attr name="tb_title_margin_top" format="dimension"/>
+        <attr name="tb_title_margin_horizontal" format="dimension"/>
+        <attr name="tb_left_visible" format="boolean" />
+        <attr name="tb_left_text" format="string" />
+        <attr name="tb_left_text_color" format="color" />
+        <attr name="tb_left_text_size" format="dimension" />
+        <attr name="tb_left_text_margin_left" format="dimension"/>
+        <attr name="tb_left_text_bold" format="boolean" />
+        <attr name="tb_left_image_visible" format="boolean" />
+        <attr name="tb_left_margin" format="dimension" />
+        <attr name="tb_left_image" format="reference" />
+        <attr name="tb_left_image_margin_left" format="dimension"/>
+        <attr name="tb_right_visible" format="boolean" />
+        <attr name="tb_right_image" format="reference" />
+        <attr name="tb_right_text" format="string" />
+        <attr name="tb_right_text_color" format="color" />
+        <attr name="tb_right_text_size" format="dimension" />
+        <attr name="tb_right_text_background" format="reference"/>
+        <attr name="tb_right_margin" format="dimension" />
+        <attr name="tb_right_image_visible" format="boolean" />
+        <attr name="tb_right_text_width" format="dimension"/>
+        <attr name="tb_right_text_height" format="dimension"/>
+        <attr name="tb_sub_title_size" format="dimension" />
+        <attr name="tb_sub_title_color" format="color" />
+        <attr name="tb_sub_title" format="string"/>
+        <attr name="tb_sub_title_visible" format="boolean"/>
+        <attr name="tb_sub_title_margin_top" format="dimension"/>
+        <attr name="tb_bottom_line_visible" format="boolean"/>
+        <attr name="tb_bottom_line_color" format="color"/>
+        <attr name="tb_bottom_line_height" format="dimension"/>
+    </declare-styleable>
+</resources>
