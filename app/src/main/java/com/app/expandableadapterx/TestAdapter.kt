@@ -20,7 +20,7 @@ class TestAdapter : ExpandableAdapter() {
         return super.getItemViewType(position)
     }
 
-    override fun getItemViewType(t: Any?): Int {
-        return super.getItemViewType(t)
+    override fun onGetItemViewType(t: Any?): Int {
+        return super.onGetItemViewType(t)
     }
 }

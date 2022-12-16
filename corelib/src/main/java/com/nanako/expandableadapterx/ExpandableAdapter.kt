@@ -258,7 +258,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         var t: Any
         for (i in 0 until size) {
             t = total!![i]
-            if (getItemViewType(t) == viewType) {
+            if (onGetItemViewType(t) == viewType) {
                 match!!.add(t)
             }
         }
@@ -292,7 +292,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         }
         var count = 0
         for (i in 0 until headerCount) {
-            if (getItemViewType(getHeader(i)) == viewType) {
+            if (onGetItemViewType(getHeader(i)) == viewType) {
                 count++
             }
         }
@@ -478,7 +478,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         var t: Any
         for (i in 0 until size) {
             t = total!![i]
-            if (getItemViewType(t) == viewType) {
+            if (onGetItemViewType(t) == viewType) {
                 match!!.add(t)
             }
         }
@@ -514,7 +514,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         }
         var count = 0
         for (i in 0 until childCount) {
-            if (getItemViewType(getChild(i)) == viewType) {
+            if (onGetItemViewType(getChild(i)) == viewType) {
                 count++
             }
         }
@@ -1046,7 +1046,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         var p = -1
         val gcc = getGroupChildCount(groupPosition)
         for (i in 0 until gcc) {
-            if (getItemViewType(getGroupChild(groupPosition, i)) == viewType) {
+            if (onGetItemViewType(getGroupChild(groupPosition, i)) == viewType) {
                 p = i
                 break
             }
@@ -1304,7 +1304,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         var header: Any
         for (i in 0 until headerCount) {
             header = getHeader(i)!!
-            if (viewType == getItemViewType(header) || viewType == getItemViewType(
+            if (viewType == onGetItemViewType(header) || viewType == getItemViewType(
                     getItemPosition(
                         header
                     )
@@ -1322,7 +1322,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         var header: Any
         for (i in headerCount - 1 downTo 0) {
             header = getHeader(i)!!
-            if (viewType == getItemViewType(header) || viewType == getItemViewType(
+            if (viewType == onGetItemViewType(header) || viewType == getItemViewType(
                     getItemPosition(
                         header
                     )
