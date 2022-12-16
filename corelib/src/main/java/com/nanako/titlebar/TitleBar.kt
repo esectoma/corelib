@@ -1,543 +1,499 @@
-package com.nanako.titlebar;
+package com.nanako.titlebar
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.Drawable
+import android.util.AttributeSet
+import android.util.Log
+import android.util.TypedValue
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewTreeObserver
+import android.widget.FrameLayout
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import com.nanako.R
+import com.nanako.titlebar.TitleBar
+import java.lang.Exception
+import java.util.HashMap
 
-import com.nanako.R;
+class TitleBar : FrameLayout, View.OnClickListener {
+    private val TAG = javaClass.name
+    private val mViewClicked: MutableMap<Int, Long> = HashMap()
+    private var mListener: Listener? = null
+    var viewStatus: View? = null
+        private set
+    var vgTitle: ViewGroup? = null
+        private set
+    var txtTitle: TextView? = null
+        private set
+    var tvSubTitle: TextView? = null
+        private set
+    var vgTitleLayout: ViewGroup? = null
+        private set
+    var vgSubTitleLayout: ViewGroup? = null
+        private set
+    var vgTitleBox: ViewGroup? = null
+        private set
+    var vgLeft: ViewGroup? = null
+        private set
+    var txtLeft: TextView? = null
+        private set
+    var imgLeft: ImageView? = null
+        private set
+    var vgRight: ViewGroup? = null
+        private set
+    var txtRight: TextView? = null
+        private set
+    var imgRight: ImageView? = null
+        private set
+    var vBottomLine: View? = null
+        private set
+    private var mFastClickDuration = 500
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class TitleBar extends FrameLayout implements View.OnClickListener {
-
-    private final String TAG = getClass().getName();
-    private Map<Integer, Long> mViewClicked = new HashMap<>();
-
-    private Listener mListener;
-
-    private View mViewStatus;
-
-    private ViewGroup mVgTitle;
-
-    private TextView mTxtTitle;
-    private TextView mTvSubTitle;
-    private ViewGroup mVgTitleLayout;
-    private ViewGroup mVgSubTitleLayout;
-    private ViewGroup mVgTitleBox;
-
-    private ViewGroup mVgLeft;
-    private TextView mTxtLeft;
-    private ImageView mImgLeft;
-
-    private ViewGroup mVgRight;
-    private TextView mTxtRight;
-    private ImageView mImgRight;
-
-    private View mVBottomLine;
-
-    private int mFastClickDuration = 500;
-
-    public TitleBar(Context context) {
-        super(context);
-        init(null);
+    constructor(context: Context?) : super(context!!) {
+        init(null)
     }
 
-    public TitleBar(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        init(attrs);
+    constructor(context: Context?, attrs: AttributeSet?) : super(
+        context!!, attrs
+    ) {
+        init(attrs)
     }
 
-    public TitleBar(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-        init(attrs);
-
+    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context!!, attrs, defStyleAttr
+    ) {
+        init(attrs)
     }
 
-    private void init(AttributeSet attrs) {
-        View view = LayoutInflater.from(getContext())
-                .inflate(R.layout.tb_view_titlebar, this, true);
-
-        mViewStatus = view.findViewById(R.id.view_status);
-        mVgTitle = (ViewGroup) view.findViewById(R.id.layout_title);
-        mTxtTitle = (TextView) view.findViewById(R.id.txt_title);
-        mVgLeft = (ViewGroup) view.findViewById(R.id.layout_left);
-        mTxtLeft = (TextView) view.findViewById(R.id.txt_left);
-        mImgLeft = (ImageView) view.findViewById(R.id.img_left);
-        mVgRight = (ViewGroup) view.findViewById(R.id.layout_right);
-        mTxtRight = (TextView) view.findViewById(R.id.txt_right);
-        mImgRight = (ImageView) view.findViewById(R.id.img_right);
-        mTvSubTitle = (TextView) view.findViewById(R.id.tv_sub_title);
-        mVgTitleLayout = (ViewGroup) view.findViewById(R.id.layout_main_title);
-        mVgSubTitleLayout = (ViewGroup) view.findViewById(R.id.layout_sub_title);
-        mVgTitleBox = (ViewGroup) view.findViewById(R.id.vg_title_box);
-        mVBottomLine = view.findViewById(R.id.v_bottom_line);
-
-        TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.TitleBar);
-
-        Drawable sbg = typedArray.getDrawable(R.styleable.TitleBar_tb_status_background);
+    private fun init(attrs: AttributeSet?) {
+        val view = LayoutInflater.from(context)
+            .inflate(R.layout.tb_view_titlebar, this, true)
+        viewStatus = view.findViewById(R.id.view_status)
+        vgTitle = view.findViewById<View>(R.id.layout_title) as ViewGroup
+        txtTitle = view.findViewById<View>(R.id.txt_title) as TextView
+        vgLeft = view.findViewById<View>(R.id.layout_left) as ViewGroup
+        txtLeft = view.findViewById<View>(R.id.txt_left) as TextView
+        imgLeft = view.findViewById<View>(R.id.img_left) as ImageView
+        vgRight = view.findViewById<View>(R.id.layout_right) as ViewGroup
+        txtRight = view.findViewById<View>(R.id.txt_right) as TextView
+        imgRight = view.findViewById<View>(R.id.img_right) as ImageView
+        tvSubTitle = view.findViewById<View>(R.id.tv_sub_title) as TextView
+        vgTitleLayout = view.findViewById<View>(R.id.layout_main_title) as ViewGroup
+        vgSubTitleLayout = view.findViewById<View>(R.id.layout_sub_title) as ViewGroup
+        vgTitleBox = view.findViewById<View>(R.id.vg_title_box) as ViewGroup
+        vBottomLine = view.findViewById(R.id.v_bottom_line)
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TitleBar)
+        val sbg = typedArray.getDrawable(R.styleable.TitleBar_tb_status_background)
         if (sbg != null) {
-            mViewStatus.setBackgroundDrawable(sbg);
+            viewStatus?.setBackgroundDrawable(sbg)
         }
-        mViewStatus.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_status_visible,
-                false) ? View.VISIBLE : View.GONE);
+        viewStatus?.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_status_visible,
+                false
+            )
+        ) VISIBLE else GONE
         if (!adjustStatusHeight()) {
-            int sheight = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_status_height,
-                    -1);
+            var sheight = typedArray.getDimensionPixelSize(
+                R.styleable.TitleBar_tb_status_height,
+                -1
+            )
             if (sheight == -1) {
-                sheight = (int) getContext().getResources().getDimension(R.dimen.tb_status_height);
+                sheight = context.resources.getDimension(R.dimen.tb_status_height).toInt()
             }
-            ViewGroup.LayoutParams paramsSh = mViewStatus.getLayoutParams();
-            paramsSh.height = sheight;
-            mViewStatus.setLayoutParams(paramsSh);
+            val paramsSh = viewStatus?.layoutParams
+            paramsSh?.height = sheight
+            viewStatus?.layoutParams = paramsSh
         }
-
-        Drawable bg = typedArray.getDrawable(R.styleable.TitleBar_tb_backgroupd);
+        val bg = typedArray.getDrawable(R.styleable.TitleBar_tb_backgroupd)
         if (bg != null) {
-            view.setBackgroundDrawable(bg);
+            view.setBackgroundDrawable(bg)
         }
-
-        int defaultColor = getResources().getColor(android.R.color.white);
-
-        mTxtTitle.setText(typedArray.getString(R.styleable.TitleBar_tb_title));
-        mTxtTitle.setTextColor(typedArray.getColor(R.styleable.TitleBar_tb_title_color,
-                defaultColor));
-        mTxtTitle.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                typedArray.getDimension(R.styleable.TitleBar_tb_title_textsize, 55));
-        mTxtTitle.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_title_visible,
-                true) ? View.VISIBLE : View.INVISIBLE);
-        boolean isBold = typedArray.getBoolean(R.styleable.TitleBar_tb_title_bold, true);
+        val defaultColor = resources.getColor(android.R.color.white)
+        txtTitle!!.text = typedArray.getString(R.styleable.TitleBar_tb_title)
+        txtTitle!!.setTextColor(
+            typedArray.getColor(
+                R.styleable.TitleBar_tb_title_color,
+                defaultColor
+            )
+        )
+        txtTitle!!.setTextSize(
+            TypedValue.COMPLEX_UNIT_PX,
+            typedArray.getDimension(R.styleable.TitleBar_tb_title_textsize, 55f)
+        )
+        txtTitle!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_title_visible,
+                true
+            )
+        ) VISIBLE else INVISIBLE
+        val isBold = typedArray.getBoolean(R.styleable.TitleBar_tb_title_bold, true)
         if (isBold) {
-            mTxtTitle.setTypeface(null, Typeface.BOLD);
+            txtTitle!!.setTypeface(null, Typeface.BOLD)
         }
-        mVgSubTitleLayout.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_sub_title_visible,
-                false) ? VISIBLE : GONE);
-        mTvSubTitle.setText(typedArray.getString(R.styleable.TitleBar_tb_sub_title));
-        int defaultSubTitleColor = Color.parseColor("#999999");
-        mTvSubTitle.setTextColor(typedArray.getColor(R.styleable.TitleBar_tb_sub_title_color,
-                defaultSubTitleColor));
-        mTvSubTitle.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                typedArray.getDimension(R.styleable.TitleBar_tb_sub_title_size,
-                        22));
-        mVgLeft.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_left_visible,
-                false) ? View.VISIBLE : View.GONE);
-        mTxtLeft.setText(typedArray.getString(R.styleable.TitleBar_tb_left_text));
-        mTxtLeft.setTextColor(typedArray.getColor(R.styleable.TitleBar_tb_left_text_color,
-                defaultColor));
-        mTxtLeft.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                typedArray.getDimension(R.styleable.TitleBar_tb_left_text_size, 22));
+        vgSubTitleLayout!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_sub_title_visible,
+                false
+            )
+        ) VISIBLE else GONE
+        tvSubTitle!!.text = typedArray.getString(R.styleable.TitleBar_tb_sub_title)
+        val defaultSubTitleColor = Color.parseColor("#999999")
+        tvSubTitle!!.setTextColor(
+            typedArray.getColor(
+                R.styleable.TitleBar_tb_sub_title_color,
+                defaultSubTitleColor
+            )
+        )
+        tvSubTitle!!.setTextSize(
+            TypedValue.COMPLEX_UNIT_PX,
+            typedArray.getDimension(R.styleable.TitleBar_tb_sub_title_size, 22f)
+        )
+        vgLeft!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_left_visible,
+                false
+            )
+        ) VISIBLE else GONE
+        txtLeft!!.text = typedArray.getString(R.styleable.TitleBar_tb_left_text)
+        txtLeft!!.setTextColor(
+            typedArray.getColor(
+                R.styleable.TitleBar_tb_left_text_color,
+                defaultColor
+            )
+        )
+        txtLeft!!.setTextSize(
+            TypedValue.COMPLEX_UNIT_PX,
+            typedArray.getDimension(R.styleable.TitleBar_tb_left_text_size, 22f)
+        )
         if (typedArray.getBoolean(R.styleable.TitleBar_tb_left_text_bold, false)) {
-            mTxtLeft.setTypeface(null, Typeface.BOLD);
+            txtLeft!!.setTypeface(null, Typeface.BOLD)
         }
-        LinearLayout.LayoutParams tvLeftParams =
-                (LinearLayout.LayoutParams) mTxtLeft.getLayoutParams();
+        val tvLeftParams = txtLeft!!.layoutParams as LinearLayout.LayoutParams
         tvLeftParams.leftMargin =
-                (int) typedArray.getDimension(R.styleable.TitleBar_tb_left_text_margin_left,
-                        0);
-        mTxtLeft.setLayoutParams(tvLeftParams);
-
-        Drawable drawableLeft = typedArray.getDrawable(R.styleable.TitleBar_tb_left_image);
-        mImgLeft.setImageDrawable(drawableLeft);
-        mImgLeft.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_left_image_visible,
-                false) ? View.VISIBLE : View.GONE);
-
-        int leftImageMarginLeft =
-                (int) typedArray.getDimension(R.styleable.TitleBar_tb_left_image_margin_left,
-                        0);
+            typedArray.getDimension(R.styleable.TitleBar_tb_left_text_margin_left, 0f).toInt()
+        txtLeft!!.layoutParams = tvLeftParams
+        val drawableLeft = typedArray.getDrawable(R.styleable.TitleBar_tb_left_image)
+        imgLeft!!.setImageDrawable(drawableLeft)
+        imgLeft!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_left_image_visible,
+                false
+            )
+        ) VISIBLE else GONE
+        val leftImageMarginLeft =
+            typedArray.getDimension(R.styleable.TitleBar_tb_left_image_margin_left, 0f).toInt()
         if (leftImageMarginLeft != 0) {
-            LinearLayout.LayoutParams params =
-                    (LinearLayout.LayoutParams) mImgLeft.getLayoutParams();
-            params.leftMargin = leftImageMarginLeft;
-            mImgLeft.setLayoutParams(params);
+            val params = imgLeft!!.layoutParams as LinearLayout.LayoutParams
+            params.leftMargin = leftImageMarginLeft
+            imgLeft!!.layoutParams = params
         }
-
-        int leftMargin = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_left_margin, 0);
+        val leftMargin = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_left_margin, 0)
         if (leftMargin != 0) {
-            LayoutParams params = (LayoutParams) mVgLeft.getLayoutParams();
-            params.leftMargin = leftMargin;
-            mVgLeft.setLayoutParams(params);
+            val params = vgLeft!!.layoutParams as LayoutParams
+            params.leftMargin = leftMargin
+            vgLeft!!.layoutParams = params
         }
-
-        mVgRight.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_right_visible,
-                false) ? View.VISIBLE : View.GONE);
-        mTxtRight.setText(typedArray.getString(R.styleable.TitleBar_tb_right_text));
-        mTxtRight.setTextColor(typedArray.getColor(R.styleable.TitleBar_tb_right_text_color,
-                defaultColor));
-        mTxtRight.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                typedArray.getDimension(R.styleable.TitleBar_tb_right_text_size, 22));
-        mImgRight.setVisibility(typedArray.getBoolean(R.styleable.TitleBar_tb_right_image_visible
-                , false) ? View.VISIBLE : View.GONE);
-        mImgRight.setImageDrawable(typedArray.getDrawable(R.styleable.TitleBar_tb_right_image));
-
-        int rightMargin = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_right_margin, 0);
+        vgRight!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_right_visible,
+                false
+            )
+        ) VISIBLE else GONE
+        txtRight!!.text = typedArray.getString(R.styleable.TitleBar_tb_right_text)
+        txtRight!!.setTextColor(
+            typedArray.getColor(
+                R.styleable.TitleBar_tb_right_text_color,
+                defaultColor
+            )
+        )
+        txtRight!!.setTextSize(
+            TypedValue.COMPLEX_UNIT_PX,
+            typedArray.getDimension(R.styleable.TitleBar_tb_right_text_size, 22f)
+        )
+        imgRight!!.visibility = if (typedArray.getBoolean(
+                R.styleable.TitleBar_tb_right_image_visible, false
+            )
+        ) VISIBLE else GONE
+        imgRight!!.setImageDrawable(typedArray.getDrawable(R.styleable.TitleBar_tb_right_image))
+        val rightMargin = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_right_margin, 0)
         if (rightMargin != 0) {
-            LayoutParams params = (LayoutParams) mVgRight.getLayoutParams();
-            params.rightMargin = rightMargin;
-            mVgRight.setLayoutParams(params);
+            val params = vgRight!!.layoutParams as LayoutParams
+            params.rightMargin = rightMargin
+            vgRight!!.layoutParams = params
         }
-        int theight = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_title_height, -1);
+        var theight = typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_title_height, -1)
         if (theight == -1) {
-            theight = (int) getContext().getResources().getDimension(R.dimen.tb_title_height);
+            theight = context.resources.getDimension(R.dimen.tb_title_height).toInt()
         }
-        int titleMarginHorizontal =
-                typedArray.getDimensionPixelSize(R.styleable.TitleBar_tb_title_margin_horizontal,
-                        0);
-        LinearLayout.LayoutParams paramsTh = (LinearLayout.LayoutParams) mVgTitle.getLayoutParams();
-        paramsTh.height = theight;
-        mVgTitle.setLayoutParams(paramsTh);
-
-        LayoutParams titleBoxParams = (LayoutParams) mVgTitleBox.getLayoutParams();
-        titleBoxParams.leftMargin = titleMarginHorizontal;
-        titleBoxParams.rightMargin = titleMarginHorizontal;
-        mVgTitleBox.setLayoutParams(titleBoxParams);
-
-        mVgLeft.setMinimumWidth(theight);
-        mVgRight.setMinimumWidth(theight);
-        int titleMarginTop = (int) typedArray.getDimension(R.styleable.TitleBar_tb_title_margin_top,
-                1);
-        int subTitleMarginTop =
-                (int) typedArray.getDimension(R.styleable.TitleBar_tb_sub_title_margin_top,
-                        1);
-        LinearLayout.LayoutParams titleParams =
-                (LinearLayout.LayoutParams) mVgTitleLayout.getLayoutParams();
-        titleParams.topMargin = titleMarginTop;
-        titleParams = (LinearLayout.LayoutParams) mVgSubTitleLayout.getLayoutParams();
-        titleParams.topMargin = subTitleMarginTop;
-
-        boolean showBottomLine = typedArray.getBoolean(R.styleable.TitleBar_tb_bottom_line_visible,
-                false);
-        mVBottomLine.setVisibility(showBottomLine ? VISIBLE : GONE);
-        int bottomLineColor = typedArray.getColor(R.styleable.TitleBar_tb_bottom_line_color, 0);
-        mVBottomLine.setBackgroundColor(bottomLineColor);
-        int bottomLineHeight =
-                (int) typedArray.getDimension(R.styleable.TitleBar_tb_bottom_line_height, 1);
-        ViewGroup.LayoutParams lineParams = mVBottomLine.getLayoutParams();
-        lineParams.height = bottomLineHeight;
-        mVBottomLine.setLayoutParams(lineParams);
-
-        Drawable rightTextBg =
-                typedArray.getDrawable(R.styleable.TitleBar_tb_right_text_background);
+        val titleMarginHorizontal = typedArray.getDimensionPixelSize(
+            R.styleable.TitleBar_tb_title_margin_horizontal,
+            0
+        )
+        val paramsTh = vgTitle!!.layoutParams as LinearLayout.LayoutParams
+        paramsTh.height = theight
+        vgTitle!!.layoutParams = paramsTh
+        val titleBoxParams = vgTitleBox!!.layoutParams as LayoutParams
+        titleBoxParams.leftMargin = titleMarginHorizontal
+        titleBoxParams.rightMargin = titleMarginHorizontal
+        vgTitleBox!!.layoutParams = titleBoxParams
+        vgLeft!!.minimumWidth = theight
+        vgRight!!.minimumWidth = theight
+        val titleMarginTop =
+            typedArray.getDimension(R.styleable.TitleBar_tb_title_margin_top, 1f).toInt()
+        val subTitleMarginTop =
+            typedArray.getDimension(R.styleable.TitleBar_tb_sub_title_margin_top, 1f).toInt()
+        var titleParams = vgTitleLayout!!.layoutParams as LinearLayout.LayoutParams
+        titleParams.topMargin = titleMarginTop
+        titleParams = vgSubTitleLayout!!.layoutParams as LinearLayout.LayoutParams
+        titleParams.topMargin = subTitleMarginTop
+        val showBottomLine = typedArray.getBoolean(
+            R.styleable.TitleBar_tb_bottom_line_visible,
+            false
+        )
+        vBottomLine?.visibility = if (showBottomLine) VISIBLE else GONE
+        val bottomLineColor = typedArray.getColor(R.styleable.TitleBar_tb_bottom_line_color, 0)
+        vBottomLine?.setBackgroundColor(bottomLineColor)
+        val bottomLineHeight =
+            typedArray.getDimension(R.styleable.TitleBar_tb_bottom_line_height, 1f).toInt()
+        val lineParams = vBottomLine?.layoutParams
+        lineParams?.height = bottomLineHeight
+        vBottomLine?.layoutParams = lineParams
+        val rightTextBg = typedArray.getDrawable(R.styleable.TitleBar_tb_right_text_background)
         if (rightTextBg != null) {
-            mTxtRight.setBackgroundDrawable(rightTextBg);
+            txtRight!!.setBackgroundDrawable(rightTextBg)
         }
-        int rightTextWidth = (int) typedArray.getDimension(R.styleable.TitleBar_tb_right_text_width,
-                -1);
-        int rightTextHeight =
-                (int) typedArray.getDimension(R.styleable.TitleBar_tb_right_text_height,
-                        -1);
+        val rightTextWidth =
+            typedArray.getDimension(R.styleable.TitleBar_tb_right_text_width, -1f).toInt()
+        val rightTextHeight =
+            typedArray.getDimension(R.styleable.TitleBar_tb_right_text_height, -1f).toInt()
         if (rightTextWidth >= 0 && rightTextHeight >= 0) {
-            LinearLayout.LayoutParams params =
-                    (LinearLayout.LayoutParams) mTxtRight.getLayoutParams();
-            params.width = rightTextWidth;
-            params.height = rightTextHeight;
-            mTxtRight.setLayoutParams(params);
+            val params = txtRight!!.layoutParams as LinearLayout.LayoutParams
+            params.width = rightTextWidth
+            params.height = rightTextHeight
+            txtRight!!.layoutParams = params
         }
-
-        mVgLeft.setOnClickListener(this);
-        mTxtLeft.setOnClickListener(this);
-        mImgLeft.setOnClickListener(this);
-        mVgRight.setOnClickListener(this);
-        mTxtRight.setOnClickListener(this);
-        mImgRight.setOnClickListener(this);
-        mTxtTitle.setOnClickListener(this);
-
-        typedArray.recycle();
-
-        updateTitleMargin();
+        vgLeft!!.setOnClickListener(this)
+        txtLeft!!.setOnClickListener(this)
+        imgLeft!!.setOnClickListener(this)
+        vgRight!!.setOnClickListener(this)
+        txtRight!!.setOnClickListener(this)
+        imgRight!!.setOnClickListener(this)
+        txtTitle!!.setOnClickListener(this)
+        typedArray.recycle()
+        updateTitleMargin()
     }
 
-    private void updateTitleMargin() {
-        updateTitleMargin(0);
+    private fun updateTitleMargin() {
+        updateTitleMargin(0)
     }
 
-    public void updateTitleMargin(final int extraSpace) {
-        mVgLeft.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            int vgLeftWidth;
-
-            @Override
-            public void onGlobalLayout() {
-                mVgLeft.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                vgLeftWidth = mVgLeft.getWidth();
-                mVgRight.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    int vgRightWidth;
-
-                    @Override
-                    public void onGlobalLayout() {
-                        mVgRight.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        vgRightWidth = mVgRight.getWidth();
-                        LayoutParams paramsLeft =
-                                (LayoutParams) mVgLeft.getLayoutParams();
-                        int vgLeftLeftMargin = paramsLeft.leftMargin;
-                        int vgLeftRightMargin = paramsLeft.rightMargin;
-                        LayoutParams paramsRight =
-                                (LayoutParams) mVgRight.getLayoutParams();
-                        int vgRightLeftMargin = paramsRight.leftMargin;
-                        int vgRightRightMargin = paramsRight.rightMargin;
-                        int maxMargin =
-                                Math.max(vgLeftWidth + vgLeftLeftMargin + vgLeftRightMargin,
-                                        vgRightWidth + vgRightLeftMargin + vgRightRightMargin);
-
-                        setTitleMarginHorizontal(maxMargin + extraSpace);
+    fun updateTitleMargin(extraSpace: Int) {
+        vgLeft!!.viewTreeObserver.addOnGlobalLayoutListener(object :
+            ViewTreeObserver.OnGlobalLayoutListener {
+            var vgLeftWidth = 0
+            override fun onGlobalLayout() {
+                vgLeft!!.viewTreeObserver.removeGlobalOnLayoutListener(this)
+                vgLeftWidth = vgLeft!!.width
+                vgRight!!.viewTreeObserver.addOnGlobalLayoutListener(object :
+                    ViewTreeObserver.OnGlobalLayoutListener {
+                    var vgRightWidth = 0
+                    override fun onGlobalLayout() {
+                        vgRight!!.viewTreeObserver.removeGlobalOnLayoutListener(this)
+                        vgRightWidth = vgRight!!.width
+                        val paramsLeft = vgLeft!!.layoutParams as LayoutParams
+                        val vgLeftLeftMargin = paramsLeft.leftMargin
+                        val vgLeftRightMargin = paramsLeft.rightMargin
+                        val paramsRight = vgRight!!.layoutParams as LayoutParams
+                        val vgRightLeftMargin = paramsRight.leftMargin
+                        val vgRightRightMargin = paramsRight.rightMargin
+                        val maxMargin = Math.max(
+                            vgLeftWidth + vgLeftLeftMargin + vgLeftRightMargin,
+                            vgRightWidth + vgRightLeftMargin + vgRightRightMargin
+                        )
+                        setTitleMarginHorizontal(maxMargin + extraSpace)
                     }
-                });
+                })
             }
-        });
+        })
     }
 
-    @Override
-    public void onClick(View v) {
+    override fun onClick(v: View) {
         if (mListener == null) {
-            return;
+            return
         }
-        int vid = v.getId();
+        val vid = v.id
         if (mViewClicked.containsKey(vid)) {
-            long lastClickTime = mViewClicked.get(vid);
+            val lastClickTime = mViewClicked[vid]!!
             if (System.currentTimeMillis() - lastClickTime <= mFastClickDuration) {
-                Log.w(TAG, "you click so fast!");
-                return;
+                Log.w(TAG, "you click so fast!")
+                return
             }
         }
-        mViewClicked.put(vid, System.currentTimeMillis());
+        mViewClicked[vid] = System.currentTimeMillis()
         if (vid == R.id.layout_left || vid == R.id.txt_left || vid == R.id.img_left) {
-            mListener.onLeftAreaClick();
+            mListener!!.onLeftAreaClick()
         } else if (vid == R.id.layout_right || vid == R.id.txt_right || vid == R.id.img_right) {
-            mListener.onRightAreaClick();
+            mListener!!.onRightAreaClick()
         } else if (vid == R.id.txt_title) {
-            mListener.onCenterAreaClick();
+            mListener!!.onCenterAreaClick()
         }
     }
 
-    public interface Listener {
-        void onLeftAreaClick();
-
-        void onRightAreaClick();
-
-        void onCenterAreaClick();
+    interface Listener {
+        fun onLeftAreaClick()
+        fun onRightAreaClick()
+        fun onCenterAreaClick()
     }
 
-    public void setListener(Listener listener) {
-        mListener = listener;
+    fun setListener(listener: Listener?) {
+        mListener = listener
     }
 
-    public void setRightVisible(boolean b) {
-        mVgRight.setVisibility(b ? View.VISIBLE : View.GONE);
+    fun setRightVisible(b: Boolean) {
+        vgRight!!.visibility = if (b) VISIBLE else GONE
     }
 
-    public void setLeftVisible(boolean b) {
-        mVgLeft.setVisibility(b ? View.VISIBLE : View.GONE);
+    fun setLeftVisible(b: Boolean) {
+        vgLeft!!.visibility = if (b) VISIBLE else GONE
     }
 
-    public void setLeftImageVisible(boolean show) {
-        mImgLeft.setVisibility(show ? View.VISIBLE : View.GONE);
+    fun setLeftImageVisible(show: Boolean) {
+        imgLeft!!.visibility = if (show) VISIBLE else GONE
     }
 
-    public void setLeftImage(int drawable) {
-        mImgLeft.setImageResource(drawable);
+    fun setLeftImage(drawable: Int) {
+        imgLeft!!.setImageResource(drawable)
     }
 
-    public void setLeftImage(Drawable drawable) {
-        mImgLeft.setImageDrawable(drawable);
+    fun setLeftImage(drawable: Drawable?) {
+        imgLeft!!.setImageDrawable(drawable)
     }
 
-    public void setRightText(int resText) {
-        mTxtRight.setText(resText);
+    fun setRightText(resText: Int) {
+        txtRight!!.setText(resText)
     }
 
-    public void setRightText(String text) {
-        mTxtRight.setText(text);
+    fun setRightText(text: String?) {
+        txtRight!!.text = text
     }
 
-    public void setRightTextColor(int color) {
-        mTxtRight.setTextColor(color);
+    fun setRightTextColor(color: Int) {
+        txtRight!!.setTextColor(color)
     }
 
-    public String getRightText() {
-        return mTxtRight.getText().toString();
+    val rightText: String
+        get() = txtRight!!.text.toString()
+
+    fun setRightImageVisible(show: Boolean) {
+        imgRight!!.visibility = if (show) VISIBLE else GONE
     }
 
-    public void setRightImageVisible(boolean show) {
-        mImgRight.setVisibility(show ? View.VISIBLE : View.GONE);
+    fun setRightImage(drawable: Int) {
+        imgRight!!.setImageResource(drawable)
     }
 
-    public void setRightImage(int drawable) {
-        mImgRight.setImageResource(drawable);
+    fun setRightImage(drawable: Drawable?) {
+        imgRight!!.setImageDrawable(drawable)
     }
 
-    public void setRightImage(Drawable drawable) {
-        mImgRight.setImageDrawable(drawable);
+    fun setTitle(resTitle: Int) {
+        txtTitle!!.setText(resTitle)
     }
 
-    public void setTitle(String title) {
-        mTxtTitle.setText(title);
+    var title: String?
+        get() = txtTitle!!.text.toString()
+        set(title) {
+            txtTitle!!.text = title
+        }
+
+    fun setTitleBackground(drawable: Drawable?) {
+        txtTitle!!.setBackgroundDrawable(drawable)
     }
 
-    public void setTitle(int resTitle) {
-        mTxtTitle.setText(resTitle);
+    fun setTitleVisible(b: Boolean) {
+        vgTitle!!.visibility = if (b) VISIBLE else GONE
     }
 
-    public String getTitle() {
-        return mTxtTitle.getText().toString();
+    fun setSubTitle(subTitle: Int) {
+        tvSubTitle!!.setText(subTitle)
     }
 
-    public void setTitleBackground(Drawable drawable) {
-        mTxtTitle.setBackgroundDrawable(drawable);
+    fun setSubTitleVisible(b: Boolean) {
+        vgSubTitleLayout!!.visibility = if (b) VISIBLE else GONE
     }
 
-    public void setTitleVisible(boolean b) {
-        mVgTitle.setVisibility(b ? View.VISIBLE : View.GONE);
+    var subTitle: String?
+        get() = tvSubTitle!!.text.toString()
+        set(subTitle) {
+            tvSubTitle!!.text = subTitle
+        }
+
+    fun setLeftText(resText: Int) {
+        txtLeft!!.setText(resText)
     }
 
-    public void setSubTitle(String subTitle) {
-        mTvSubTitle.setText(subTitle);
+    fun setLeftText(text: String?) {
+        txtLeft!!.text = text
     }
 
-    public void setSubTitle(int subTitle) {
-        mTvSubTitle.setText(subTitle);
+    val leftText: String
+        get() = txtLeft!!.text.toString()
+
+    fun setLeftTextColor(color: Int) {
+        txtLeft!!.setTextColor(color)
     }
 
-    public void setSubTitleVisible(boolean b) {
-        mVgSubTitleLayout.setVisibility(b ? VISIBLE : GONE);
+    fun setStatusVisible(show: Boolean) {
+        viewStatus!!.visibility = if (show) VISIBLE else GONE
     }
 
-    public String getSubTitle() {
-        return mTvSubTitle.getText().toString();
+    fun setStatusBackground(drawable: Drawable?) {
+        viewStatus!!.setBackgroundDrawable(drawable)
     }
 
-    public void setLeftText(int resText) {
-        mTxtLeft.setText(resText);
+    fun setTitleSize(textSize: Float) {
+        txtTitle!!.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
     }
 
-    public void setLeftText(String text) {
-        mTxtLeft.setText(text);
+    fun setTitleColor(color: Int) {
+        txtTitle!!.setTextColor(color)
     }
 
-    public String getLeftText() {
-        return mTxtLeft.getText().toString();
+    fun setTitleMarginHorizontal(marginHorizontal: Int) {
+        val titleBoxParams = vgTitleBox!!.layoutParams as LayoutParams
+        titleBoxParams.leftMargin = marginHorizontal
+        titleBoxParams.rightMargin = marginHorizontal
+        vgTitleBox!!.layoutParams = titleBoxParams
     }
 
-    public void setLeftTextColor(int color) {
-        mTxtLeft.setTextColor(color);
-    }
-
-    public void setStatusVisible(boolean show) {
-        mViewStatus.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-
-    public void setStatusBackground(Drawable drawable) {
-        mViewStatus.setBackgroundDrawable(drawable);
-    }
-
-    public void setTitleSize(float textSize) {
-        mTxtTitle.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize);
-    }
-
-    public void setTitleColor(int color) {
-        mTxtTitle.setTextColor(color);
-    }
-
-    public View getViewStatus() {
-        return mViewStatus;
-    }
-
-    public ViewGroup getVgTitle() {
-        return mVgTitle;
-    }
-
-    public TextView getTxtTitle() {
-        return mTxtTitle;
-    }
-
-    public TextView getTvSubTitle() {
-        return mTvSubTitle;
-    }
-
-    public ViewGroup getVgTitleLayout() {
-        return mVgTitleLayout;
-    }
-
-    public ViewGroup getVgSubTitleLayout() {
-        return mVgSubTitleLayout;
-    }
-
-    public ViewGroup getVgTitleBox() {
-        return mVgTitleBox;
-    }
-
-    public ViewGroup getVgLeft() {
-        return mVgLeft;
-    }
-
-    public TextView getTxtLeft() {
-        return mTxtLeft;
-    }
-
-    public ImageView getImgLeft() {
-        return mImgLeft;
-    }
-
-    public ViewGroup getVgRight() {
-        return mVgRight;
-    }
-
-    public TextView getTxtRight() {
-        return mTxtRight;
-    }
-
-    public ImageView getImgRight() {
-        return mImgRight;
-    }
-
-    public View getVBottomLine() {
-        return mVBottomLine;
-    }
-
-    public void setTitleMarginHorizontal(int marginHorizontal) {
-        LayoutParams titleBoxParams = (LayoutParams) mVgTitleBox.getLayoutParams();
-        titleBoxParams.leftMargin = marginHorizontal;
-        titleBoxParams.rightMargin = marginHorizontal;
-        mVgTitleBox.setLayoutParams(titleBoxParams);
-    }
-
-    public boolean adjustStatusHeight() {
-        int height = getStatusHeight(getContext());
+    fun adjustStatusHeight(): Boolean {
+        val height = getStatusHeight(context)
         if (height != -1) {
-            ViewGroup.LayoutParams paramsSh = mViewStatus.getLayoutParams();
-            paramsSh.height = height;
-            mViewStatus.setLayoutParams(paramsSh);
-            return true;
+            val paramsSh = viewStatus!!.layoutParams
+            paramsSh.height = height
+            viewStatus!!.layoutParams = paramsSh
+            return true
         }
-        return false;
+        return false
     }
 
-    public static int getStatusHeight(Context context) {
-        int statusHeight = -1;
-        try {
-            Class<?> clazz = Class.forName("com.android.internal.R$dimen");
-            Object object = clazz.newInstance();
-            int height = Integer.parseInt(clazz.getField("status_bar_height")
-                    .get(object)
-                    .toString());
-            statusHeight = context.getResources().getDimensionPixelSize(height);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return statusHeight;
+    fun setFastClickDuration(fastClickDuration: Int) {
+        mFastClickDuration = fastClickDuration
     }
 
-    public void setFastClickDuration(int fastClickDuration) {
-        mFastClickDuration = fastClickDuration;
+    companion object {
+        fun getStatusHeight(context: Context): Int {
+            var statusHeight = -1
+            try {
+                val clazz = Class.forName("com.android.internal.R\$dimen")
+                val `object` = clazz.newInstance()
+                val height = clazz.getField("status_bar_height")[`object`]
+                    .toString().toInt()
+                statusHeight = context.resources.getDimensionPixelSize(height)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return statusHeight
+        }
     }
 }
