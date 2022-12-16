@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rlm_loading">Loading</string>
+    <string name="rlm_nomore">No more</string>
+    <string name="rlm_load_failed">Failed to load, click retry</string>
+</resources>
