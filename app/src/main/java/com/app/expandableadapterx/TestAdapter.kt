@@ -2,7 +2,7 @@ package com.app.expandableadapterx
 
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import com.qbw.expandableadapterx.ExpandableAdapter
+import com.nanako.expandableadapterx.ExpandableAdapter
 
 /**
  * barry 2022/10/5
