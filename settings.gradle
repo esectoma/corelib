@@ -12,6 +12,6 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "expandableadapterx"
+rootProject.name = "corelib"
 include ':app'
 include ':corelib'
