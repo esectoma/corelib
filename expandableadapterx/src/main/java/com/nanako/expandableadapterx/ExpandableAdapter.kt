@@ -23,7 +23,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         private set
 
     override fun getItemViewType(position: Int): Int {
-        val vt = getItemViewType(mList[position])
+        val vt = onGetItemViewType(mList[position])
         return if (vt == -1) {
             L.GL.e("%s itemViewType is -1 ???", mList[position].javaClass.name)
             super.getItemViewType(position)
@@ -32,7 +32,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         }
     }
 
-    open fun getItemViewType(t: Any?): Int {
+    open fun onGetItemViewType(t: Any?): Int {
         return -1
     }
 
