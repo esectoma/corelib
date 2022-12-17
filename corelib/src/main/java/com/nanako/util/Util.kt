@@ -8,6 +8,7 @@ object Util {
     /**
      * 1234567890 -> 123****8901
      */
+    @JvmStatic
     fun replaceChar(
         text: String, headerLength: Int, placeholderLength: Int,
         placeholder: Char
@@ -34,6 +35,7 @@ object Util {
     /**
      * 将秒转化为小时分钟秒
      */
+    @JvmStatic
     fun getHourMinuteSecond(seconds: Int): IntArray {
         val hourSeconds = 3600
         val h = seconds / hourSeconds
@@ -42,6 +44,7 @@ object Util {
         return intArrayOf(h, m, s)
     }
 
+    @JvmStatic
     fun getHourMinuteSecondVideoDuration(seconds: Int): String {
         val hms = getHourMinuteSecond(seconds)
         return if (hms[0] > 0) {
@@ -60,10 +63,12 @@ object Util {
         )
     }
 
+    @JvmStatic
     fun isFirstRow(pos: Int, rowColumnCount: Int): Boolean {
         return pos in 0 until rowColumnCount
     }
 
+    @JvmStatic
     fun isLastRow(pos: Int, rowColumnCount: Int, totalCount: Int): Boolean {
         val row = totalCount / rowColumnCount
         return if (totalCount % rowColumnCount == 0) {

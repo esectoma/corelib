@@ -20,6 +20,7 @@ object MD5Util {
      * @param source 获取’utf-8‘字节
      * @return 将加密之后的字节用base64编码
      */
+    @JvmStatic
     fun encryptBase64(source: String): String {
         var ens = ""
         try {
@@ -34,6 +35,7 @@ object MD5Util {
      * @param source 要加密的字节
      * @return 将加密之后的字节用base64编码
      */
+    @JvmStatic
     fun encryptBase64(source: ByteArray?): String {
         var sen = ""
         try {
@@ -49,6 +51,7 @@ object MD5Util {
      * @param source 获取utf-8编码格式的字节
      * @return 将加密之后的字节转换成16进制的字符串
      */
+    @JvmStatic
     fun encryptHex(source: String): String {
         var sen = ""
         try {
@@ -63,10 +66,12 @@ object MD5Util {
      * @param source 要加密的字节
      * @return 将加密之后的字节转换成16进制的字符串
      */
+    @JvmStatic
     fun encryptHex(source: ByteArray): String {
         return encrypt(source)?.let { StringUtil.byteToHexString(it) } ?: ""
     }
 
+    @JvmStatic
     fun encrypt(source: ByteArray?): ByteArray? {
         var sdigest: ByteArray? = null
         try {
@@ -80,6 +85,7 @@ object MD5Util {
         return sdigest
     }
 
+    @JvmStatic
     fun encrypt(`in`: InputStream): ByteArray? {
         var digest: ByteArray? = null
         try {
