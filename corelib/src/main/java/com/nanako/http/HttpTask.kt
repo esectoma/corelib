@@ -320,10 +320,13 @@ class HttpTask private constructor(
                                 )
                             }
                             val iHttpResponse = httpResponse
-                            if (iHttpResponse.code == 0) {
+                            if (iHttpResponse.onGetCode() == 0) {
                                 onHttpSuccess(result, sGson!!.fromJson<Any>(result, mResponseClass))
                             } else {
-                                onHttpFailed(iHttpResponse.code, iHttpResponse.message)
+                                onHttpFailed(
+                                    iHttpResponse.onGetCode(),
+                                    iHttpResponse.onGetMessage() ?: ""
+                                )
                             }
                         } else {
                             onHttpSuccess(result, iDataConverter.doConvert(result, mResponseClass))
@@ -598,8 +601,8 @@ class HttpTask private constructor(
     }
 
     interface IHttpResponse {
-        val code: Int
-        val message: String
+        fun onGetCode(): Int
+        fun onGetMessage(): String?
     }
 
     private fun getFileExtensionFromPath(path: String): String {
