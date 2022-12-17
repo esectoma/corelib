@@ -8,10 +8,13 @@ import android.view.WindowManager
 import com.nanako.log.Log.Companion.LOG
 
 object SystemBar {
+
+    @JvmStatic
     fun setColor(act: Activity, statusBar: Boolean, statusRes: Int) {
         setColor(act.window, statusBar, statusRes, false, false, 0, false)
     }
 
+    @JvmStatic
     fun setColor(
         act: Activity,
         statusBar: Boolean,
@@ -21,6 +24,7 @@ object SystemBar {
         setColor(act.window, statusBar, statusRes, androidMLightStatusBar, false, 0, false)
     }
 
+    @JvmStatic
     fun setColor(
         act: Activity,
         statusBar: Boolean,
@@ -40,6 +44,7 @@ object SystemBar {
         )
     }
 
+    @JvmStatic
     fun setColor(
         window: Window,
         statusBar: Boolean,
@@ -94,6 +99,7 @@ object SystemBar {
         window.decorView.systemUiVisibility = visibility
     }
 
+    @JvmStatic
     fun setStatusLight(window: Window, lightStatusBar: Boolean) {
         var visibility = window.decorView.systemUiVisibility
         if (lightStatusBar) {
@@ -112,6 +118,7 @@ object SystemBar {
         window.decorView.systemUiVisibility = visibility
     }
 
+    @JvmStatic
     fun setNavigationLight(window: Window, lightNavBar: Boolean) {
         var visibility = window.decorView.systemUiVisibility
         if (lightNavBar) {
@@ -128,7 +135,8 @@ object SystemBar {
             }
         }
         window.decorView.systemUiVisibility = visibility
-    } /*@Deprecated
+    }
+    /*@Deprecated
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public static void caseLollipop(Activity act,
                                     boolean statusBar,
