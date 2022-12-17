@@ -11,7 +11,9 @@ import com.nanako.encryption.StringUtil
 import java.util.*
 
 object StringUtil {
+
     @JvmOverloads
+    @JvmStatic
     fun byteToHexString(bytes: ByteArray, isUpperase: Boolean = true): String {
         val sbytes = StringBuffer()
         for (b in bytes) {
@@ -20,6 +22,7 @@ object StringUtil {
         return sbytes.toString()
     }
 
+    @JvmStatic
     fun hexStringToByte(hexString: String): ByteArray? {
         var hexString = hexString
         val mapHexToDec = initHexToDec()
@@ -40,6 +43,7 @@ object StringUtil {
         return bytes
     }
 
+    @JvmStatic
     private fun initHexToDec(): HashMap<Char, Int> {
         val mapHexToDec = HashMap<Char, Int>()
         mapHexToDec['0'] = 0
