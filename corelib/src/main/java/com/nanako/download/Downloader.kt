@@ -355,7 +355,7 @@ class Downloader private constructor(private val mContext: Context) {
     }
 
     companion object {
-        var instance: Downloader? = null
+        lateinit var instance: Downloader
             private set
 
         fun init(context: Context) {
