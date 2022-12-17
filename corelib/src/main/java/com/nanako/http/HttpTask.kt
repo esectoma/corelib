@@ -618,13 +618,13 @@ class HttpTask private constructor(
         return sb.toString()
     }
 
-    class SimpleCallBack : CallBack {
+    open class SimpleCallBack : CallBack {
         override fun onHttpStart(httpTask: HttpTask?) {}
         override fun onHttpSuccess(httpTask: HttpTask?, entity: Any?) {}
         override fun onHttpFailed(httpTask: HttpTask?, errorCode: Int, message: String?) {}
     }
 
-    class SimpleFlowCallBack : FlowCallBack {
+    open class SimpleFlowCallBack : FlowCallBack {
         override fun onSuccess(httpTask: HttpTask?, entity: Any?, modelStr: String?) {}
         override fun onFailed(httpTask: HttpTask?, errorCode: Int, message: String?) {}
     }
