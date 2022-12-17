@@ -631,7 +631,7 @@ class HttpTask private constructor(
     }
 
     interface RealExceptionCallback {
-        fun onHttpTaskRealException(httpTask: HttpTask?, code: Int, exception: String?)
+        fun onHttpTaskRealException(httpTask: HttpTask, code: Int, exception: String?)
     }
 
     interface ClientServerTimeDiffCallback {
