@@ -1,5 +1,6 @@
 package com.nanako.http
 
+import android.app.Application
 import android.content.Context
 import android.os.Handler
 import android.text.TextUtils
@@ -572,18 +573,18 @@ class HttpTask private constructor(
     }
 
     interface ICommonErrorDeal {
-        fun onFailed(httpTask: HttpTask?, code: Int, message: String?)
+        fun onFailed(httpTask: HttpTask, code: Int, message: String?)
     }
 
     interface CallBack {
-        fun onHttpStart(httpTask: HttpTask?)
-        fun onHttpSuccess(httpTask: HttpTask?, entity: Any?)
-        fun onHttpFailed(httpTask: HttpTask?, errorCode: Int, message: String?)
+        fun onHttpStart(httpTask: HttpTask)
+        fun onHttpSuccess(httpTask: HttpTask, entity: Any)
+        fun onHttpFailed(httpTask: HttpTask, errorCode: Int, message: String)
     }
 
     interface FlowCallBack {
-        fun onSuccess(httpTask: HttpTask?, entity: Any?, modelStr: String?)
-        fun onFailed(httpTask: HttpTask?, errorCode: Int, message: String?)
+        fun onSuccess(httpTask: HttpTask, entity: Any, modelStr: String)
+        fun onFailed(httpTask: HttpTask, errorCode: Int, message: String)
     }
 
     interface IDataConverter {
@@ -591,7 +592,7 @@ class HttpTask private constructor(
     }
 
     interface ICommonHeadersAndParameters {
-        fun init(context: Context?)
+        fun init(context: Context)
         fun getHeaders(method: String, params: Map<String, Any>?): Map<String, String>?
         fun getParams(method: String, params: Map<String, Any>?): Map<String, Any>?
     }
@@ -619,14 +620,14 @@ class HttpTask private constructor(
     }
 
     open class SimpleCallBack : CallBack {
-        override fun onHttpStart(httpTask: HttpTask?) {}
-        override fun onHttpSuccess(httpTask: HttpTask?, entity: Any?) {}
-        override fun onHttpFailed(httpTask: HttpTask?, errorCode: Int, message: String?) {}
+        override fun onHttpStart(httpTask: HttpTask) {}
+        override fun onHttpSuccess(httpTask: HttpTask, entity: Any) {}
+        override fun onHttpFailed(httpTask: HttpTask, errorCode: Int, message: String) {}
     }
 
     open class SimpleFlowCallBack : FlowCallBack {
-        override fun onSuccess(httpTask: HttpTask?, entity: Any?, modelStr: String?) {}
-        override fun onFailed(httpTask: HttpTask?, errorCode: Int, message: String?) {}
+        override fun onSuccess(httpTask: HttpTask, entity: Any, modelStr: String) {}
+        override fun onFailed(httpTask: HttpTask, errorCode: Int, message: String) {}
     }
 
     interface RealExceptionCallback {
@@ -667,7 +668,7 @@ class HttpTask private constructor(
         const val NETWORK_ERROR_CASE_1 = "Connection reset"
         val NETWORK_ERROR_CASE_LIST: MutableList<String> = ArrayList()
         private var sDebug = false
-        var context: Context? = null
+        lateinit var context: Application
             private set
         private var sOkHttpClient: OkHttpClient? = null
         private var sGson: Gson? = null
@@ -685,7 +686,7 @@ class HttpTask private constructor(
         @JvmOverloads
         fun init(
             isDebug: Boolean,
-            context: Context,
+            context: Application,
             url: String,
             iCommonHeadersAndParameters: ICommonHeadersAndParameters?,
             iCommonErrorDeal: ICommonErrorDeal?,
