@@ -1284,6 +1284,15 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         return true
     }
 
+    fun addOrUpdateHeaderByViewType(viewType: Int, data: Any, addToPosition: Int) {
+        val p = getHeaderPositionByViewType(viewType)
+        if (p == -1) {
+            addHeader(addToPosition, data)
+        } else {
+            updateHeader(p, data)
+        }
+    }
+
     fun getHeaderPositionByViewType(viewType: Int): Int {
         var p = -1
         var header: Any
@@ -1338,6 +1347,15 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
                 LOG.w("No header's viewType is $viewType")
                 break
             }
+        }
+    }
+
+    fun addOrUpdateChildByViewType(viewType: Int, data: Any, addToPosition: Int) {
+        val p = getChildPositionByViewType(viewType)
+        if (p == -1) {
+            addChild(addToPosition, data)
+        } else {
+            updateChild(p, data)
         }
     }
 
@@ -1446,6 +1464,15 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
                 LOG.w("no group's viewType is $viewType")
                 break
             }
+        }
+    }
+
+    fun addOrUpdateFooterByViewType(viewType: Int, data: Any, addToPosition: Int) {
+        val p = getFooterPositionByViewType(viewType)
+        if (p == -1) {
+            addFooter(addToPosition, data)
+        } else {
+            updateFooter(p, data)
         }
     }
 
