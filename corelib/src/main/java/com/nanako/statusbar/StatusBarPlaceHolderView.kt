@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.View
 import com.nanako.R
 import com.nanako.statusbar.StatusBarPlaceHolderView
+import com.nanako.titlebar.TitleBar
 
 /**
  * Author：qbw on 2019/3/22 17:16
@@ -40,7 +41,7 @@ class StatusBarPlaceHolderView : View {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val sh = getStatusHeight(context)
+        val sh = TitleBar.getStatusHeight(context)
         super.onMeasure(
             widthMeasureSpec,
             MeasureSpec.makeMeasureSpec(sh + extraHeight, MeasureSpec.EXACTLY)
@@ -48,25 +49,6 @@ class StatusBarPlaceHolderView : View {
     }
 
     companion object {
-        fun getStatusHeight(context: Context): Int {
-            var statusHeight = dp2px(context, 24f).toInt()
-            try {
-                val clazz = Class.forName("com.android.internal.R\$dimen")
-                val `object` = clazz.newInstance()
-                val height = clazz.getField("status_bar_height")[`object`]
-                    .toString().toInt()
-                statusHeight = context.resources.getDimensionPixelSize(height)
-            } catch (e: ClassNotFoundException) {
-                e.printStackTrace()
-            } catch (e: InstantiationException) {
-                e.printStackTrace()
-            } catch (e: IllegalAccessException) {
-                e.printStackTrace()
-            } catch (e: NoSuchFieldException) {
-                e.printStackTrace()
-            }
-            return statusHeight
-        }
 
         fun dp2px(context: Context, dp: Float): Float {
             val scale = context.resources.displayMetrics.density

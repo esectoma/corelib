@@ -29,4 +29,12 @@
         app:tb_backgroupd="@color/purple_200"
         android:layout_height="wrap_content"/>
 
+    <com.nanako.statusbar.StatusBarPlaceHolderView
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tb2"
+        android:layout_width="match_parent"
+        android:background="@color/purple_500"
+        android:layout_height="wrap_content"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
