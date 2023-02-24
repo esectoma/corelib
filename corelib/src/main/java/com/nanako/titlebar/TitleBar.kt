@@ -97,14 +97,16 @@ class TitleBar : FrameLayout, View.OnClickListener {
                 false
             )
         ) VISIBLE else GONE
-        if (!adjustStatusHeight()) {
-            var sheight = typedArray.getDimensionPixelSize(
-                R.styleable.TitleBar_tb_status_height,
-                -1
-            )
-            if (sheight == -1) {
+        var sheight = typedArray.getDimensionPixelSize(
+            R.styleable.TitleBar_tb_status_height,
+            -1
+        )
+        if (sheight == -1) {
+            if (!adjustStatusHeight()) {
                 sheight = context.resources.getDimension(R.dimen.tb_status_height).toInt()
             }
+        }
+        if (sheight != -1) {
             val paramsSh = viewStatus?.layoutParams
             paramsSh?.height = sheight
             viewStatus?.layoutParams = paramsSh
