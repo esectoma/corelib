@@ -16,9 +16,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.nanako.R
-import com.nanako.titlebar.TitleBar
-import java.lang.Exception
-import java.util.HashMap
 
 class TitleBar : FrameLayout, View.OnClickListener {
     private val TAG = javaClass.name
@@ -71,8 +68,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
     }
 
     private fun init(attrs: AttributeSet?) {
-        val view = LayoutInflater.from(context)
-            .inflate(R.layout.tb_view_titlebar, this, true)
+        val view = LayoutInflater.from(context).inflate(R.layout.tb_view_titlebar, this, true)
         viewStatus = view.findViewById(R.id.view_status)
         vgTitle = view.findViewById<View>(R.id.layout_title) as ViewGroup
         txtTitle = view.findViewById<View>(R.id.txt_title) as TextView
@@ -93,13 +89,11 @@ class TitleBar : FrameLayout, View.OnClickListener {
             viewStatus?.setBackgroundDrawable(sbg)
         }
         viewStatus?.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_status_visible,
-                false
+                R.styleable.TitleBar_tb_status_visible, false
             )
         ) VISIBLE else GONE
         var sheight = typedArray.getDimensionPixelSize(
-            R.styleable.TitleBar_tb_status_height,
-            -1
+            R.styleable.TitleBar_tb_status_height, -1
         )
         if (sheight == -1) {
             if (!adjustStatusHeight()) {
@@ -119,8 +113,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
         txtTitle!!.text = typedArray.getString(R.styleable.TitleBar_tb_title)
         txtTitle!!.setTextColor(
             typedArray.getColor(
-                R.styleable.TitleBar_tb_title_color,
-                defaultColor
+                R.styleable.TitleBar_tb_title_color, defaultColor
             )
         )
         txtTitle!!.setTextSize(
@@ -128,8 +121,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
             typedArray.getDimension(R.styleable.TitleBar_tb_title_textsize, 55f)
         )
         txtTitle!!.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_title_visible,
-                true
+                R.styleable.TitleBar_tb_title_visible, true
             )
         ) VISIBLE else INVISIBLE
         val isBold = typedArray.getBoolean(R.styleable.TitleBar_tb_title_bold, true)
@@ -137,16 +129,14 @@ class TitleBar : FrameLayout, View.OnClickListener {
             txtTitle!!.setTypeface(null, Typeface.BOLD)
         }
         vgSubTitleLayout!!.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_sub_title_visible,
-                false
+                R.styleable.TitleBar_tb_sub_title_visible, false
             )
         ) VISIBLE else GONE
         tvSubTitle!!.text = typedArray.getString(R.styleable.TitleBar_tb_sub_title)
         val defaultSubTitleColor = Color.parseColor("#999999")
         tvSubTitle!!.setTextColor(
             typedArray.getColor(
-                R.styleable.TitleBar_tb_sub_title_color,
-                defaultSubTitleColor
+                R.styleable.TitleBar_tb_sub_title_color, defaultSubTitleColor
             )
         )
         tvSubTitle!!.setTextSize(
@@ -154,15 +144,13 @@ class TitleBar : FrameLayout, View.OnClickListener {
             typedArray.getDimension(R.styleable.TitleBar_tb_sub_title_size, 22f)
         )
         vgLeft!!.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_left_visible,
-                false
+                R.styleable.TitleBar_tb_left_visible, false
             )
         ) VISIBLE else GONE
         txtLeft!!.text = typedArray.getString(R.styleable.TitleBar_tb_left_text)
         txtLeft!!.setTextColor(
             typedArray.getColor(
-                R.styleable.TitleBar_tb_left_text_color,
-                defaultColor
+                R.styleable.TitleBar_tb_left_text_color, defaultColor
             )
         )
         txtLeft!!.setTextSize(
@@ -179,8 +167,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
         val drawableLeft = typedArray.getDrawable(R.styleable.TitleBar_tb_left_image)
         imgLeft!!.setImageDrawable(drawableLeft)
         imgLeft!!.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_left_image_visible,
-                false
+                R.styleable.TitleBar_tb_left_image_visible, false
             )
         ) VISIBLE else GONE
         val leftImageMarginLeft =
@@ -197,15 +184,13 @@ class TitleBar : FrameLayout, View.OnClickListener {
             vgLeft!!.layoutParams = params
         }
         vgRight!!.visibility = if (typedArray.getBoolean(
-                R.styleable.TitleBar_tb_right_visible,
-                false
+                R.styleable.TitleBar_tb_right_visible, false
             )
         ) VISIBLE else GONE
         txtRight!!.text = typedArray.getString(R.styleable.TitleBar_tb_right_text)
         txtRight!!.setTextColor(
             typedArray.getColor(
-                R.styleable.TitleBar_tb_right_text_color,
-                defaultColor
+                R.styleable.TitleBar_tb_right_text_color, defaultColor
             )
         )
         txtRight!!.setTextSize(
@@ -228,8 +213,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
             theight = context.resources.getDimension(R.dimen.tb_title_height).toInt()
         }
         val titleMarginHorizontal = typedArray.getDimensionPixelSize(
-            R.styleable.TitleBar_tb_title_margin_horizontal,
-            0
+            R.styleable.TitleBar_tb_title_margin_horizontal, 0
         )
         val paramsTh = vgTitle!!.layoutParams as LinearLayout.LayoutParams
         paramsTh.height = theight
@@ -249,8 +233,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
         titleParams = vgSubTitleLayout!!.layoutParams as LinearLayout.LayoutParams
         titleParams.topMargin = subTitleMarginTop
         val showBottomLine = typedArray.getBoolean(
-            R.styleable.TitleBar_tb_bottom_line_visible,
-            false
+            R.styleable.TitleBar_tb_bottom_line_visible, false
         )
         vBottomLine?.visibility = if (showBottomLine) VISIBLE else GONE
         val bottomLineColor = typedArray.getColor(R.styleable.TitleBar_tb_bottom_line_color, 0)
@@ -470,7 +453,7 @@ class TitleBar : FrameLayout, View.OnClickListener {
 
     fun adjustStatusHeight(): Boolean {
         val height = getStatusHeight(context)
-        if (height != -1) {
+        if (height != 0) {
             val paramsSh = viewStatus!!.layoutParams
             paramsSh.height = height
             viewStatus!!.layoutParams = paramsSh
@@ -485,17 +468,11 @@ class TitleBar : FrameLayout, View.OnClickListener {
 
     companion object {
         fun getStatusHeight(context: Context): Int {
-            var statusHeight = -1
-            try {
-                val clazz = Class.forName("com.android.internal.R\$dimen")
-                val `object` = clazz.newInstance()
-                val height = clazz.getField("status_bar_height")[`object`]
-                    .toString().toInt()
-                statusHeight = context.resources.getDimensionPixelSize(height)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            return statusHeight
+            val resourceId: Int =
+                context.getResources().getIdentifier("status_bar_height", "dimen", "android")
+            return if (resourceId > 0) {
+                context.resources.getDimensionPixelSize(resourceId)
+            } else 0
         }
     }
 }
