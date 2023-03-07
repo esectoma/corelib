@@ -10,18 +10,17 @@ object Util {
      */
     @JvmStatic
     fun replaceChar(
-        text: String, headerLength: Int, placeholderLength: Int,
-        placeholder: Char
+        text: String, headerLen: Int, placeholderLen: Int, placeholder: Char
     ): String {
         if (TextUtils.isEmpty(text)) {
             return text
         }
-        if (text.length >= placeholderLength) {
-            val end = headerLength + 4
+        if (text.length >= placeholderLen) {
+            val end = headerLen + 4
             val pc = text.toCharArray()
             val sb = StringBuilder()
-            for (i in 0 until text.length) {
-                if (i >= headerLength && i < end) {
+            for (i in text.indices) {
+                if (i in headerLen until end) {
                     sb.append(placeholder)
                 } else {
                     sb.append(pc[i])
@@ -30,6 +29,23 @@ object Util {
             return sb.toString()
         }
         return text
+    }
+
+    @JvmStatic
+    fun replaceChar(
+        text: String, headerLen: Int, tailLen: Int, placeholderLen: Int, placeHolder: String
+    ): String {
+        if (text.isEmpty()) {
+            return text
+        }
+        if (headerLen + tailLen > text.length) {
+            return text
+        }
+        val sb = StringBuilder()
+        if (headerLen > 0) sb.append(text.subSequence(0, headerLen))
+        for (i in 0 until placeholderLen) sb.append(placeHolder)
+        if (tailLen > 0) sb.append(text.subSequence(text.length - tailLen, text.length))
+        return sb.toString()
     }
 
     /**
@@ -49,17 +65,10 @@ object Util {
         val hms = getHourMinuteSecond(seconds)
         return if (hms[0] > 0) {
             String.format(
-                Locale.getDefault(),
-                "%02d:%02d:%02d",
-                hms[0],
-                hms[1],
-                hms[2]
+                Locale.getDefault(), "%02d:%02d:%02d", hms[0], hms[1], hms[2]
             )
         } else String.format(
-            Locale.getDefault(),
-            "%02d:%02d",
-            hms[1],
-            hms[2]
+            Locale.getDefault(), "%02d:%02d", hms[1], hms[2]
         )
     }
 
