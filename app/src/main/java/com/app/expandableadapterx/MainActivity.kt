@@ -31,5 +31,6 @@ class MainActivity : AppCompatActivity() {
 
         LOG.i(Util.replaceChar("1234567",2,2,10,"*"))
         LOG.i(Util.replaceChar("1234567",0,2,10,"*"))
+        LOG.i(Util.replaceChar(null,0,2,10,"*"))
     }
 }

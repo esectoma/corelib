@@ -10,10 +10,10 @@ object Util {
      */
     @JvmStatic
     fun replaceChar(
-        text: String, headerLen: Int, placeholderLen: Int, placeholder: Char
+        text: String?, headerLen: Int, placeholderLen: Int, placeholder: Char
     ): String {
-        if (TextUtils.isEmpty(text)) {
-            return text
+        if (text.isNullOrEmpty()) {
+            return ""
         }
         if (text.length >= placeholderLen) {
             val end = headerLen + 4
@@ -33,10 +33,10 @@ object Util {
 
     @JvmStatic
     fun replaceChar(
-        text: String, headerLen: Int, tailLen: Int, placeholderLen: Int, placeHolder: String
+        text: String?, headerLen: Int, tailLen: Int, placeholderLen: Int, placeHolder: String
     ): String {
-        if (text.isEmpty()) {
-            return text
+        if (text.isNullOrEmpty()) {
+            return ""
         }
         if (headerLen + tailLen > text.length) {
             return text
