@@ -369,9 +369,7 @@ class HttpTask private constructor() {
             } else {
                 callBack?.onHttpSuccess(this, model)
             }
-            if (null != afterCallBack) {
-                afterCallBack!!.onSuccess(this, model, modelStr)
-            }
+            afterCallBack?.onSuccess(this, model, modelStr)
         }
     }
 
