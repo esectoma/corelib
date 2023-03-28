@@ -17,6 +17,10 @@ import okhttp3.Call
 import okhttp3.Response
 import kotlin.jvm.JvmOverloads
 import com.google.gson.Gson
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -348,47 +352,50 @@ class HttpTask private constructor() {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun onHttpStart() {
         printUrlParams()
-        sHandler.post {
+        GlobalScope.launch(Dispatchers.Main) {
             if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpStart(this)
+                wrCallBack?.get()?.onHttpStart(this@HttpTask)
             } else {
-                callBack?.onHttpStart(this)
+                callBack?.onHttpStart(this@HttpTask)
             }
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun onHttpSuccess(modelStr: String, model: Any) {
         printUrlParams()
         backgroundBeforeCallBack?.onSuccess(this, model, modelStr)
-        sHandler.post {
-            beforeCallBack?.onSuccess(this, model, modelStr)
+        GlobalScope.launch(Dispatchers.Main) {
+            beforeCallBack?.onSuccess(this@HttpTask, model, modelStr)
             if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpSuccess(this, model)
+                wrCallBack?.get()?.onHttpSuccess(this@HttpTask, model)
             } else {
-                callBack?.onHttpSuccess(this, model)
+                callBack?.onHttpSuccess(this@HttpTask, model)
             }
-            afterCallBack?.onSuccess(this, model, modelStr)
+            afterCallBack?.onSuccess(this@HttpTask, model, modelStr)
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun onHttpFailed(code: Int, msg: String) {
         printUrlParams()
         if (backgroundBeforeCallBack != null) {
             backgroundBeforeCallBack!!.onFailed(this, code, msg)
         }
-        sHandler.post {
+        GlobalScope.launch(Dispatchers.Main) {
             if (globalDeal) {
-                sICommonErrorDeal?.onFailed(this, code, msg)
+                sICommonErrorDeal?.onFailed(this@HttpTask, code, msg)
             }
-            beforeCallBack?.onFailed(this, code, msg)
+            beforeCallBack?.onFailed(this@HttpTask, code, msg)
             if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpFailed(this, code, msg)
+                wrCallBack?.get()?.onHttpFailed(this@HttpTask, code, msg)
             } else {
-                callBack?.onHttpFailed(this, code, msg)
+                callBack?.onHttpFailed(this@HttpTask, code, msg)
             }
-            afterCallBack?.onFailed(this, code, msg)
+            afterCallBack?.onFailed(this@HttpTask, code, msg)
         }
     }
 
@@ -476,7 +483,7 @@ class HttpTask private constructor() {
         private var sDebug = false
         lateinit var context: Application
             private set
-        private var sOkHttpClient: OkHttpClient? = null
+        private lateinit var sOkHttpClient: OkHttpClient
         private var sGson: Gson? = null
         private var sICommonHeadersAndParameters: ICommonHeadersAndParameters? = null
         private var sICommonErrorDeal: ICommonErrorDeal? = null
@@ -484,7 +491,6 @@ class HttpTask private constructor() {
         private var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
         private var sUrl: String? = null
         private var sTimeDiff: Long = 0
-        private lateinit var sHandler: Handler
         var sLog = Log()
         private var sResponseClass: Class<*>? = null
         private var sType = Type.RAW_METHOD_APPEND_URL
@@ -532,7 +538,6 @@ class HttpTask private constructor() {
             }
             sOkHttpClient = builder.build()
             sGson = Gson()
-            sHandler = Handler()
             sICommonHeadersAndParameters?.init(Companion.context)
             sType = type
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)

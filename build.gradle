@@ -19,4 +19,5 @@ ext {
     expandableadapter_version = '5.2'
     log_version = '1.0'
     recyclerview_version = '1.2.1'
+    lifecycle = '2.4.0'
 }
