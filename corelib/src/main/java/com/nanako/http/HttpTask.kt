@@ -14,21 +14,9 @@ import okhttp3.Request
 import okhttp3.MultipartBody
 import okhttp3.FormBody
 import okhttp3.Call
-import okhttp3.ResponseBody
 import okhttp3.Response
-import com.nanako.http.HttpTask.FlowCallBack
-import com.nanako.http.HttpTask.CallBack
-import com.nanako.http.HttpTask.BODY_TYPE
-import com.nanako.http.HttpTask
 import kotlin.jvm.JvmOverloads
-import com.nanako.http.HttpTask.IDataConverter
-import com.nanako.http.HttpTask.IHttpResponse
 import com.google.gson.Gson
-import com.nanako.http.HttpTask.ICommonHeadersAndParameters
-import com.nanako.http.HttpTask.ICommonErrorDeal
-import com.nanako.http.HttpTask.RealExceptionCallback
-import com.nanako.http.HttpTask.ClientServerTimeDiffCallback
-import com.nanako.http.CustomTrust
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -45,36 +33,28 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by Bond on 2016/4/13.
  */
-class HttpTask private constructor(
-    private var mUrl: String?,
-    val method: String,
-    var params: Map<String, Any>?,
-    private val mResponseClass: Class<*>?,
-    var backParam: Any?,
-    private var mBeforeCallBack: FlowCallBack?,
-    callBack: CallBack,
-    afterCallBack: FlowCallBack?
-) {
-    private var mFiles: Map<String, String>? = null
+class HttpTask private constructor() {
+    var url: String? = null
+    var method: String = ""
+    var params: Map<String, Any>? = null
+    var responseClass: Class<*>? = null
+    var backParam: Any? = null
+    var beforeCallBack: FlowCallBack? = null
+    var files: Map<String, String>? = null
     var headers: Map<String, String>? = null
-        private set
-    private var mAfterCallBack: FlowCallBack?
+    var afterCallBack: FlowCallBack? = null
     var wrCallBack: WeakReference<CallBack>? = null
-    private var mWeakReferenceCallback = false
-    private var mCallBack: CallBack? = null
-    private var mExtraParams: MutableMap<String, Any>? = null
-    private var mBackgroundBeforeCallBack: FlowCallBack? = null
-    var isCanceled = false
-        private set
-    var isFinished = false
-        private set
-    private var mBodyType = BODY_TYPE.POST
-    private var mGlobalDeal = true
-    private var mNoCommonParam = false
-    private var mStartTimestamp: Long = 0
-    private var mDefaultFileExtension = "jpg"
+    var weakReferenceCallback = false
+    var callBack: CallBack? = null
+    var extraParams: MutableMap<String, Any>? = null
+    var backgroundBeforeCallBack: FlowCallBack? = null
+    var defaultFileExtension = "jpg"
+    var globalDeal = true
+    var noCommonParam = false
+    private var bodyType = BodyType.POST
+    private var startTimestamp: Long = 0
 
-    private enum class BODY_TYPE {
+    private enum class BodyType {
         GET, POST, UPLOAD, PATCH, DELETE
     }
 
@@ -83,69 +63,43 @@ class HttpTask private constructor(
     }
 
     init {
-        if (mWeakReferenceCallback) {
+        if (weakReferenceCallback) {
             wrCallBack = WeakReference(callBack)
         } else {
-            mCallBack = callBack
+            callBack = null
         }
-        mAfterCallBack = afterCallBack
     }
 
     fun get(): HttpTask {
-        mBodyType = BODY_TYPE.GET
+        bodyType = BodyType.GET
         return this
     }
 
     fun post(): HttpTask {
-        mBodyType = BODY_TYPE.POST
+        bodyType = BodyType.POST
         return this
     }
 
     fun patch(): HttpTask {
-        mBodyType = BODY_TYPE.PATCH
+        bodyType = BodyType.PATCH
         return this
     }
 
     fun delete(): HttpTask {
-        mBodyType = BODY_TYPE.DELETE
+        bodyType = BodyType.DELETE
         return this
     }
 
     fun upload(files: Map<String, String>?): HttpTask {
-        mBodyType = BODY_TYPE.UPLOAD
-        mFiles = files
-        setNoCommonParam(true)
-        return this
-    }
-
-    fun setUrl(url: String?): HttpTask {
-        mUrl = url
-        return this
-    }
-
-    fun setBackParam(backParam: Any?): HttpTask {
-        this.backParam = backParam
-        return this
-    }
-
-    fun setBeforeCallBack(beforeCallBack: FlowCallBack?): HttpTask {
-        mBeforeCallBack = beforeCallBack
-        return this
-    }
-
-    fun setAfterCallBack(afterCallBack: FlowCallBack?): HttpTask {
-        mAfterCallBack = afterCallBack
-        return this
-    }
-
-    fun setWeakReferenceCallback(weakReferenceCallback: Boolean): HttpTask {
-        mWeakReferenceCallback = weakReferenceCallback
+        bodyType = BodyType.UPLOAD
+        this.files = files
+        noCommonParam = true
         return this
     }
 
     private fun dealRequest(): Request? {
         try {
-            if (sICommonHeadersAndParameters != null && !mNoCommonParam) {
+            if (sICommonHeadersAndParameters != null && !noCommonParam) {
                 params = sICommonHeadersAndParameters!!.getParams(method, params)
             }
             if (params == null) {
@@ -164,16 +118,16 @@ class HttpTask private constructor(
                     }
                 }
             }
-            if (mBodyType == BODY_TYPE.UPLOAD) {
+            if (bodyType == BodyType.UPLOAD) {
                 val bodyBuilder: MultipartBody.Builder = MultipartBody.Builder().setType(
                     MultipartBody.FORM
                 )
-                if (mFiles == null || mFiles!!.isEmpty()) {
+                if (files == null || files!!.isEmpty()) {
                     sLog.e("no file!")
                     return null
                 }
                 var file: File
-                val params = mFiles!!.entries.iterator()
+                val params = files!!.entries.iterator()
                 var param: Map.Entry<String, String>
                 var filePath: String
                 while (params.hasNext()) {
@@ -191,7 +145,7 @@ class HttpTask private constructor(
                     if (!TextUtils.isEmpty(mineType)) {
                         fileName = "$key.$fileExtension"
                     } else {
-                        fileExtension = mDefaultFileExtension
+                        fileExtension = defaultFileExtension
                         mineType = getMimeTypeFromExtension(fileExtension)
                         fileName = "$key.$fileExtension"
                     }
@@ -213,7 +167,7 @@ class HttpTask private constructor(
             } else {
                 val url = realUrl
                 val entrySet = params!!.entries
-                if (mBodyType == BODY_TYPE.POST) {
+                if (bodyType == BodyType.POST) {
                     if (sType == Type.RAW_METHOD_APPEND_URL) {
                         reqBuilder.url(url!!).post(RequestBody.create(JSON, jsonParam))
                     } else if (sType == Type.FORM_METHOD_IN_FORMBODY) {
@@ -226,7 +180,7 @@ class HttpTask private constructor(
                         }
                         reqBuilder.url(url!!).post(formBuilder.build())
                     }
-                } else if (mBodyType == BODY_TYPE.GET || mBodyType == BODY_TYPE.DELETE) {
+                } else if (bodyType == BodyType.GET || bodyType == BodyType.DELETE) {
                     var urlBuilder = StringBuilder(url)
                     urlBuilder.append("?")
                     for ((key, value) in entrySet) {
@@ -241,12 +195,12 @@ class HttpTask private constructor(
                         ""
                     )
                     reqBuilder.url(urlBuilder.toString())
-                    if (mBodyType == BODY_TYPE.GET) {
+                    if (bodyType == BodyType.GET) {
                         reqBuilder.get()
                     } else {
                         reqBuilder.delete()
                     }
-                } else if (mBodyType == BODY_TYPE.PATCH) {
+                } else if (bodyType == BodyType.PATCH) {
                     reqBuilder.url(url!!).patch(RequestBody.create(JSON, jsonParam))
                 }
             }
@@ -260,10 +214,10 @@ class HttpTask private constructor(
 
     val realUrl: String?
         get() = if (sType == Type.FORM_METHOD_IN_FORMBODY) {
-            mUrl
-        } else mUrl + if (!TextUtils.isEmpty(method)) method else ""
+            url
+        } else url + if (!TextUtils.isEmpty(method)) method else ""
     private val jsonParam: String
-        private get() {
+        get() {
             if (params == null || params!!.isEmpty()) {
                 return "{}"
             }
@@ -282,7 +236,7 @@ class HttpTask private constructor(
             sLog.e("request == null")
             return this
         }
-        mStartTimestamp = System.currentTimeMillis()
+        startTimestamp = System.currentTimeMillis()
         onHttpStart()
         sOkHttpClient!!.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
@@ -302,7 +256,7 @@ class HttpTask private constructor(
             override fun onResponse(call: Call, response: Response) {
                 try {
                     calculateTimeDiff(response)
-                    if (mResponseClass != null) {
+                    if (responseClass != null) {
                         sLog.v("response[\${mResponseClass.getName()}]")
                     }
                     if (sResponseClass != null) {
@@ -321,7 +275,7 @@ class HttpTask private constructor(
                             }
                             val iHttpResponse = httpResponse
                             if (iHttpResponse.onGetCode() == 0) {
-                                onHttpSuccess(result, sGson!!.fromJson<Any>(result, mResponseClass))
+                                onHttpSuccess(result, sGson!!.fromJson<Any>(result, responseClass))
                             } else {
                                 onHttpFailed(
                                     iHttpResponse.onGetCode(),
@@ -329,7 +283,7 @@ class HttpTask private constructor(
                                 )
                             }
                         } else {
-                            onHttpSuccess(result, iDataConverter.doConvert(result, mResponseClass))
+                            onHttpSuccess(result, iDataConverter.doConvert(result, responseClass))
                         }
                     } else {
                         sLog.e("http error status code[\${response.code()}]")
@@ -355,7 +309,7 @@ class HttpTask private constructor(
                 } finally {
                     response.close()
                     val currTimestamp = System.currentTimeMillis()
-                    val diff = currTimestamp - mStartTimestamp
+                    val diff = currTimestamp - startTimestamp
                     if (diff > 2000) {
                         sLog.w(method + "," + formatApiTime(diff))
                     } else {
@@ -389,190 +343,71 @@ class HttpTask private constructor(
 
     private fun onHttpStart() {
         sLog.urlD(realUrl!!, params!!)
-        sHandler!!.post(object : Runnable {
-            override fun run() {
-                isFinished = false
-                if (mWeakReferenceCallback) {
-                    val callBack = wrCallBack!!.get()
-                    if (null != callBack) {
-                        callBack.onHttpStart(this@HttpTask)
-                    } else {
-                        sLog.w("callBack was destroyed")
-                    }
+        sHandler.post {
+            if (weakReferenceCallback) {
+                val callBack = wrCallBack!!.get()
+                if (null != callBack) {
+                    callBack.onHttpStart(this@HttpTask)
                 } else {
-                    mCallBack?.onHttpStart(this@HttpTask)
+                    sLog.w("callBack was destroyed")
                 }
+            } else {
+                callBack?.onHttpStart(this@HttpTask)
             }
-        })
+        }
     }
 
     private fun onHttpSuccess(modelStr: String, entity: Any) {
         sLog.urlI(realUrl!!, params!!)
-        if (mBackgroundBeforeCallBack != null) {
-            mBackgroundBeforeCallBack!!.onSuccess(this, entity, modelStr)
+        if (backgroundBeforeCallBack != null) {
+            backgroundBeforeCallBack!!.onSuccess(this, entity, modelStr)
         }
-        sHandler!!.post(object : Runnable {
-            override fun run() {
-                if (null != mBeforeCallBack) {
-                    mBeforeCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
-                }
-                if (mWeakReferenceCallback) {
-                    val callBack = wrCallBack!!.get()
-                    if (null != callBack) {
-                        callBack.onHttpSuccess(this@HttpTask, entity)
-                    } else {
-                        sLog.w("callBack was destroyed")
-                    }
-                } else {
-                    mCallBack?.onHttpSuccess(this@HttpTask, entity)
-                }
-                if (null != mAfterCallBack) {
-                    mAfterCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
-                }
-                isFinished = true
+        sHandler.post {
+            if (null != beforeCallBack) {
+                beforeCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
             }
-        })
+            if (weakReferenceCallback) {
+                val callBack = wrCallBack!!.get()
+                if (null != callBack) {
+                    callBack.onHttpSuccess(this@HttpTask, entity)
+                } else {
+                    sLog.w("callBack was destroyed")
+                }
+            } else {
+                callBack?.onHttpSuccess(this@HttpTask, entity)
+            }
+            if (null != afterCallBack) {
+                afterCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
+            }
+        }
     }
 
     private fun onHttpFailed(errorCode: Int, message: String) {
         sLog.urlE(realUrl!!, params!!)
-        if (mBackgroundBeforeCallBack != null) {
-            mBackgroundBeforeCallBack!!.onFailed(this, errorCode, message)
+        if (backgroundBeforeCallBack != null) {
+            backgroundBeforeCallBack!!.onFailed(this, errorCode, message)
         }
-        sHandler!!.post(object : Runnable {
-            override fun run() {
-                if (sICommonErrorDeal != null && mGlobalDeal) {
-                    sICommonErrorDeal!!.onFailed(this@HttpTask, errorCode, message)
-                }
-                if (null != mBeforeCallBack) {
-                    mBeforeCallBack!!.onFailed(this@HttpTask, errorCode, message)
-                }
-                if (mWeakReferenceCallback) {
-                    val callBack = wrCallBack!!.get()
-                    if (null != callBack) {
-                        callBack.onHttpFailed(this@HttpTask, errorCode, message)
-                    } else {
-                        sLog.w("callBack was destroyed")
-                    }
-                } else {
-                    mCallBack?.onHttpFailed(this@HttpTask, errorCode, message)
-                }
-                if (null != mAfterCallBack) {
-                    mAfterCallBack!!.onFailed(this@HttpTask, errorCode, message)
-                }
-                isFinished = true
+        sHandler.post {
+            if (sICommonErrorDeal != null && globalDeal) {
+                sICommonErrorDeal!!.onFailed(this@HttpTask, errorCode, message)
             }
-        })
-    }
-
-    fun cancel() {
-        isCanceled = true
-    }
-
-    fun setGlobalDeal(globalDeal: Boolean): HttpTask {
-        mGlobalDeal = globalDeal
-        return this
-    }
-
-    fun setNoCommonParam(noCommonParam: Boolean): HttpTask {
-        mNoCommonParam = noCommonParam
-        return this
-    }
-
-    fun setBackgroundBeforeCallBack(backgroundBeforeCallBack: FlowCallBack?): HttpTask {
-        mBackgroundBeforeCallBack = backgroundBeforeCallBack
-        return this
-    }
-
-    fun setDefaultFileExtension(defaultFileExtension: String): HttpTask {
-        mDefaultFileExtension = defaultFileExtension
-        return this
-    }
-
-    val backParamBoolean: Boolean
-        get() = if (backParam != null && backParam is Boolean) {
-            backParam as Boolean
-        } else false
-    val backParamLong: Long
-        get() = if (backParam != null && backParam is Long) {
-            backParam as Long
-        } else 0L
-    val backParamInt: Int
-        get() = if (backParam != null && backParam is Int) {
-            backParam as Int
-        } else 0
-    val backParamString: String
-        get() = if (backParam != null && backParam is String) {
-            backParam as String
-        } else ""
-
-    fun addExtraParam(key: String, param: Any): HttpTask {
-        if (mExtraParams == null) {
-            mExtraParams = HashMap()
+            if (null != beforeCallBack) {
+                beforeCallBack!!.onFailed(this@HttpTask, errorCode, message)
+            }
+            if (weakReferenceCallback) {
+                val callBack = wrCallBack!!.get()
+                if (null != callBack) {
+                    callBack.onHttpFailed(this@HttpTask, errorCode, message)
+                } else {
+                    sLog.w("callBack was destroyed")
+                }
+            } else {
+                callBack?.onHttpFailed(this@HttpTask, errorCode, message)
+            }
+            if (null != afterCallBack) {
+                afterCallBack!!.onFailed(this@HttpTask, errorCode, message)
+            }
         }
-        mExtraParams!![key] = param
-        return this
-    }
-
-    fun getExtraParam(key: String): Any? {
-        return if (extraParamSize <= 0) null else mExtraParams!![key]
-    }
-
-    val extraParamSize: Int
-        get() = if (mExtraParams == null) 0 else mExtraParams!!.size
-
-    fun getExtraParamBoolean(key: String): Boolean {
-        val o = getExtraParam(key)
-        if (o is Boolean) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be boolean!!!")
-        return false
-    }
-
-    fun getExtraParamLong(key: String): Long {
-        val o = getExtraParam(key)
-        if (o is Long) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be long!!!")
-        return -1
-    }
-
-    fun getExtraParamInt(key: String): Int {
-        val o = getExtraParam(key)
-        if (o is Int) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be int!!!")
-        return -1
-    }
-
-    fun getExtraParamString(key: String): String {
-        val o = getExtraParam(key)
-        if (o is String) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be string!!!")
-        return ""
-    }
-
-    fun getExtraParamFloat(key: String): Float {
-        val o = getExtraParam(key)
-        if (o is Float) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be float!!!")
-        return -1f
-    }
-
-    fun getExtraParamDouble(key: String): Double {
-        val o = getExtraParam(key)
-        if (o is Double) {
-            return o
-        }
-        sLog.e("the value for [\$key] must be double!!!")
-        return (-1).toDouble()
     }
 
     interface ICommonErrorDeal {
@@ -645,20 +480,6 @@ class HttpTask private constructor(
         var mConnectTimeout = 30
         var mReadTimeout = 30
         var mWriteTimeout = 30
-        fun setConnectTimeout(connectTimeout: Int): Param {
-            mConnectTimeout = connectTimeout
-            return this
-        }
-
-        fun setReadTimeout(readTimeout: Int): Param {
-            mReadTimeout = readTimeout
-            return this
-        }
-
-        fun setWriteTimeout(writeTimeout: Int): Param {
-            mWriteTimeout = writeTimeout
-            return this
-        }
     }
 
     companion object {
@@ -681,7 +502,7 @@ class HttpTask private constructor(
         private var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
         private var sUrl: String? = null
         private var sTimeDiff: Long = 0
-        private var sHandler: Handler? = null
+        private lateinit var sHandler: Handler
         var sLog = Log()
         private var sResponseClass: Class<*>? = null
         private var sType = Type.RAW_METHOD_APPEND_URL
@@ -730,9 +551,7 @@ class HttpTask private constructor(
             sOkHttpClient = builder.build()
             sGson = Gson()
             sHandler = Handler()
-            if (sICommonHeadersAndParameters != null) {
-                sICommonHeadersAndParameters!!.init(Companion.context)
-            }
+            sICommonHeadersAndParameters?.init(Companion.context)
             sType = type
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
@@ -766,16 +585,16 @@ class HttpTask private constructor(
             callBack: CallBack,
             afterCallBack: FlowCallBack?
         ): HttpTask {
-            return HttpTask(
-                sUrl,
-                method,
-                params,
-                responseClass,
-                backParam,
-                beforeCallBack,
-                callBack,
-                afterCallBack
-            )
+            return HttpTask().apply {
+                this.url = sUrl
+                this.method = method
+                this.params = params
+                this.responseClass = responseClass
+                this.backParam = backParam
+                this.beforeCallBack = beforeCallBack
+                this.callBack = callBack
+                this.afterCallBack = afterCallBack
+            }
         }
 
         fun setRealExceptionCallback(realExceptionCallback: RealExceptionCallback?) {
@@ -788,19 +607,19 @@ class HttpTask private constructor(
 
         private fun calculateTimeDiff(response: Response) {
             val dateStr = response.header("Date")
-            try {
-                val date = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(
-                    dateStr
-                )
-                sTimeDiff = System.currentTimeMillis() - date.time
-                if (sClientServerTimeDiffCallback != null) {
-                    sClientServerTimeDiffCallback!!.onClientServerTimeDiff(sTimeDiff)
+            dateStr?.let {
+                try {
+                    SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(dateStr)
+                        ?.let { date ->
+                            sTimeDiff = System.currentTimeMillis() - date.time
+                            sClientServerTimeDiffCallback?.onClientServerTimeDiff(sTimeDiff)
+                            sLog.v("local and server time differ [${sTimeDiff}]")
+                        }
+                } catch (e: Exception) {
+                    sTimeDiff = 0
+                    e.printStackTrace()
+                    sLog.e(e)
                 }
-                sLog.v("local and server time differ [\$sTimeDiff]")
-            } catch (e: Exception) {
-                sTimeDiff = 0
-                e.printStackTrace()
-                sLog.e(e)
             }
         }
 
