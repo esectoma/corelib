@@ -273,13 +273,12 @@ class HttpTask private constructor() {
                                             "IHttpResponse"
                                 )
                             }
-                            val iHttpResponse = httpResponse
-                            if (iHttpResponse.onGetCode() == 0) {
+                            if (httpResponse.onGetCode() == 0) {
                                 onHttpSuccess(result, sGson!!.fromJson<Any>(result, responseClass))
                             } else {
                                 onHttpFailed(
-                                    iHttpResponse.onGetCode(),
-                                    iHttpResponse.onGetMessage() ?: ""
+                                    httpResponse.onGetCode(),
+                                    httpResponse.onGetMessage() ?: ""
                                 )
                             }
                         } else {
@@ -341,92 +340,77 @@ class HttpTask private constructor() {
         return sec.toString() + "s" + ms + "ms"
     }
 
+    private fun printUrlParams() {
+        realUrl?.let { r ->
+            params?.let { p ->
+                sLog.urlD(r, p)
+            }
+        }
+    }
+
     private fun onHttpStart() {
-        sLog.urlD(realUrl!!, params!!)
+        printUrlParams()
         sHandler.post {
             if (weakReferenceCallback) {
-                val callBack = wrCallBack!!.get()
-                if (null != callBack) {
-                    callBack.onHttpStart(this@HttpTask)
-                } else {
-                    sLog.w("callBack was destroyed")
-                }
+                wrCallBack?.get()?.onHttpStart(this)
             } else {
-                callBack?.onHttpStart(this@HttpTask)
+                callBack?.onHttpStart(this)
             }
         }
     }
 
-    private fun onHttpSuccess(modelStr: String, entity: Any) {
-        sLog.urlI(realUrl!!, params!!)
-        if (backgroundBeforeCallBack != null) {
-            backgroundBeforeCallBack!!.onSuccess(this, entity, modelStr)
-        }
+    private fun onHttpSuccess(modelStr: String, model: Any) {
+        printUrlParams()
+        backgroundBeforeCallBack?.onSuccess(this, model, modelStr)
         sHandler.post {
-            if (null != beforeCallBack) {
-                beforeCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
-            }
+            beforeCallBack?.onSuccess(this, model, modelStr)
             if (weakReferenceCallback) {
-                val callBack = wrCallBack!!.get()
-                if (null != callBack) {
-                    callBack.onHttpSuccess(this@HttpTask, entity)
-                } else {
-                    sLog.w("callBack was destroyed")
-                }
+                wrCallBack?.get()?.onHttpSuccess(this, model)
             } else {
-                callBack?.onHttpSuccess(this@HttpTask, entity)
+                callBack?.onHttpSuccess(this, model)
             }
             if (null != afterCallBack) {
-                afterCallBack!!.onSuccess(this@HttpTask, entity, modelStr)
+                afterCallBack!!.onSuccess(this, model, modelStr)
             }
         }
     }
 
-    private fun onHttpFailed(errorCode: Int, message: String) {
-        sLog.urlE(realUrl!!, params!!)
+    private fun onHttpFailed(code: Int, msg: String) {
+        printUrlParams()
         if (backgroundBeforeCallBack != null) {
-            backgroundBeforeCallBack!!.onFailed(this, errorCode, message)
+            backgroundBeforeCallBack!!.onFailed(this, code, msg)
         }
         sHandler.post {
-            if (sICommonErrorDeal != null && globalDeal) {
-                sICommonErrorDeal!!.onFailed(this@HttpTask, errorCode, message)
+            if (globalDeal) {
+                sICommonErrorDeal?.onFailed(this, code, msg)
             }
-            if (null != beforeCallBack) {
-                beforeCallBack!!.onFailed(this@HttpTask, errorCode, message)
-            }
+            beforeCallBack?.onFailed(this, code, msg)
             if (weakReferenceCallback) {
-                val callBack = wrCallBack!!.get()
-                if (null != callBack) {
-                    callBack.onHttpFailed(this@HttpTask, errorCode, message)
-                } else {
-                    sLog.w("callBack was destroyed")
-                }
+                wrCallBack?.get()?.onHttpFailed(this, code, msg)
             } else {
-                callBack?.onHttpFailed(this@HttpTask, errorCode, message)
+                callBack?.onHttpFailed(this, code, msg)
             }
-            if (null != afterCallBack) {
-                afterCallBack!!.onFailed(this@HttpTask, errorCode, message)
-            }
+            afterCallBack?.onFailed(this, code, msg)
         }
     }
 
     interface ICommonErrorDeal {
-        fun onFailed(httpTask: HttpTask, code: Int, message: String?)
+        fun onFailed(ht: HttpTask, code: Int, msg: String?)
     }
 
     interface CallBack {
-        fun onHttpStart(httpTask: HttpTask)
-        fun onHttpSuccess(httpTask: HttpTask, entity: Any)
-        fun onHttpFailed(httpTask: HttpTask, errorCode: Int, message: String)
+        fun onHttpStart(ht: HttpTask)
+        fun onHttpSuccess(ht: HttpTask, model: Any)
+        fun onHttpFailed(ht: HttpTask, code: Int, msg: String)
     }
 
     interface FlowCallBack {
-        fun onSuccess(httpTask: HttpTask, entity: Any, modelStr: String)
-        fun onFailed(httpTask: HttpTask, errorCode: Int, message: String)
+        fun onSuccess(ht: HttpTask, entity: Any, modelStr: String)
+        fun onFailed(ht: HttpTask, code: Int, msg: String)
     }
 
     interface IDataConverter {
-        fun doConvert(dataStr: String?, responseClass: Class<*>?): Any
+        fun doConvert(dataStr: String?, responseCls: Class<*>?): Any
     }
 
     interface ICommonHeadersAndParameters {
@@ -458,14 +442,14 @@ class HttpTask private constructor() {
     }
 
     open class SimpleCallBack : CallBack {
-        override fun onHttpStart(httpTask: HttpTask) {}
-        override fun onHttpSuccess(httpTask: HttpTask, entity: Any) {}
-        override fun onHttpFailed(httpTask: HttpTask, errorCode: Int, message: String) {}
+        override fun onHttpStart(ht: HttpTask) {}
+        override fun onHttpSuccess(ht: HttpTask, model: Any) {}
+        override fun onHttpFailed(ht: HttpTask, code: Int, msg: String) {}
     }
 
     open class SimpleFlowCallBack : FlowCallBack {
-        override fun onSuccess(httpTask: HttpTask, entity: Any, modelStr: String) {}
-        override fun onFailed(httpTask: HttpTask, errorCode: Int, message: String) {}
+        override fun onSuccess(ht: HttpTask, entity: Any, modelStr: String) {}
+        override fun onFailed(ht: HttpTask, code: Int, msg: String) {}
     }
 
     interface RealExceptionCallback {
