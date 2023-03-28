@@ -242,7 +242,7 @@ class HttpTask private constructor() {
         }
         startTimestamp = System.currentTimeMillis()
         onHttpStart()
-        sOkHttpClient!!.newCall(request).enqueue(object : Callback {
+        sOkHttpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 sLog.e(e)
