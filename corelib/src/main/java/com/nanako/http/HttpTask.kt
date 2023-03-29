@@ -47,14 +47,14 @@ class HttpTask private constructor() {
     var files: Map<String, String>? = null
     var headers: Map<String, String>? = null
     var afterCallBack: FlowCallBack? = null
-    var wrCallBack: WeakReference<CallBack>? = null
-    var weakReferenceCallback = false
     var callBack: CallBack? = null
     var extraParams: MutableMap<String, Any>? = null
     var backgroundBeforeCallBack: FlowCallBack? = null
     var defaultFileExtension = "jpg"
     var globalDeal = true
     var noCommonParam = false
+    private var wrCallBack: WeakReference<CallBack>? = null
+    private var weakReferenceCallback = false
     private var bodyType = BodyType.POST
     private var startTimestamp: Long = 0
 
@@ -64,14 +64,6 @@ class HttpTask private constructor() {
 
     enum class Type {
         RAW_METHOD_APPEND_URL, FORM_METHOD_IN_FORMBODY
-    }
-
-    init {
-        if (weakReferenceCallback) {
-            wrCallBack = WeakReference(callBack)
-        } else {
-            callBack = null
-        }
     }
 
     fun get(): HttpTask {
@@ -99,6 +91,13 @@ class HttpTask private constructor() {
         this.files = files
         noCommonParam = true
         return this
+    }
+
+    fun softRefCallback() {
+        callBack?.let {
+            wrCallBack = WeakReference(callBack)
+            callBack = null
+        }
     }
 
     private fun dealRequest(): Request? {
