@@ -464,6 +464,10 @@ class HttpTask private constructor() {
         fun onClientServerTimeDiff(millisecond: Long)
     }
 
+    interface DynamicUrlCallback {
+        fun onGetDynamicUrl(): String?
+    }
+
     class Param {
         var mConnectTimeout = 30
         var mReadTimeout = 30
@@ -486,13 +490,15 @@ class HttpTask private constructor() {
         private var sGson: Gson? = null
         private var sICommonHeadersAndParameters: ICommonHeadersAndParameters? = null
         private var sICommonErrorDeal: ICommonErrorDeal? = null
-        private var sRealExceptionCallback: RealExceptionCallback? = null
-        private var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
+        var sRealExceptionCallback: RealExceptionCallback? = null
+        var sDynamicUrlCallback: DynamicUrlCallback? = null
+        var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
         var sUrl: String? = null
         private var sTimeDiff: Long = 0
         var sLog = Log()
         private var sResponseClass: Class<*>? = null
         private var sType = Type.RAW_METHOD_APPEND_URL
+        var dynamicUrl = false
 
         @JvmOverloads
         fun init(
@@ -572,7 +578,7 @@ class HttpTask private constructor() {
             afterCallBack: FlowCallBack?
         ): HttpTask {
             return HttpTask().apply {
-                this.url = sUrl
+                this.url = if (dynamicUrl) sDynamicUrlCallback?.onGetDynamicUrl() else sUrl
                 this.method = method
                 this.params = params
                 this.responseClass = responseClass
@@ -581,14 +587,6 @@ class HttpTask private constructor() {
                 this.callBack = callBack
                 this.afterCallBack = afterCallBack
             }
-        }
-
-        fun setRealExceptionCallback(realExceptionCallback: RealExceptionCallback?) {
-            sRealExceptionCallback = realExceptionCallback
-        }
-
-        fun setClientServerTimeDiffCallback(clientServerTimeDiffCallback: ClientServerTimeDiffCallback?) {
-            sClientServerTimeDiffCallback = clientServerTimeDiffCallback
         }
 
         private fun calculateTimeDiff(response: Response) {
