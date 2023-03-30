@@ -488,7 +488,7 @@ class HttpTask private constructor() {
         private var sICommonErrorDeal: ICommonErrorDeal? = null
         private var sRealExceptionCallback: RealExceptionCallback? = null
         private var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
-        private var sUrl: String? = null
+        var sUrl: String? = null
         private var sTimeDiff: Long = 0
         var sLog = Log()
         private var sResponseClass: Class<*>? = null
