@@ -99,7 +99,7 @@ class HttpTask private constructor() {
         }
     }
 
-    private fun dealRequest(): Request? {
+    private fun getRequest(): Request? {
         try {
             if (iCommonHeadersAndParameters != null && !noCommonParam) {
                 params = iCommonHeadersAndParameters!!.getParams(method, params)
@@ -233,7 +233,7 @@ class HttpTask private constructor() {
 
     @JvmOverloads
     fun execute(iDataConverter: IDataConverter? = null): HttpTask {
-        val request = dealRequest()
+        val request = getRequest()
         if (request == null) {
             log.e("request == null")
             return this
@@ -291,7 +291,7 @@ class HttpTask private constructor() {
                         }
                     } else {
                         log.e("http error status code[\${response.code()}]")
-                        onHttpFailed(response.code, "")
+                        onHttpFailed(FAILUE, SYSTEM_ERROR)
                         if (realExceptionCallback != null) {
                             realExceptionCallback!!.onHttpTaskRealException(
                                 this@HttpTask, FAILUE,
