@@ -2,7 +2,6 @@ package com.nanako.http
 
 import android.app.Application
 import android.content.Context
-import android.os.Handler
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import com.nanako.log.Log
@@ -102,15 +101,15 @@ class HttpTask private constructor() {
 
     private fun dealRequest(): Request? {
         try {
-            if (sICommonHeadersAndParameters != null && !noCommonParam) {
-                params = sICommonHeadersAndParameters!!.getParams(method, params)
+            if (iCommonHeadersAndParameters != null && !noCommonParam) {
+                params = iCommonHeadersAndParameters!!.getParams(method, params)
             }
             if (params == null) {
                 params = TreeMap()
             }
             val reqBuilder = Request.Builder()
-            if (sICommonHeadersAndParameters != null) {
-                val headers = sICommonHeadersAndParameters!!.getHeaders(
+            if (iCommonHeadersAndParameters != null) {
+                val headers = iCommonHeadersAndParameters!!.getHeaders(
                     method,
                     params
                 )
@@ -126,7 +125,7 @@ class HttpTask private constructor() {
                     MultipartBody.FORM
                 )
                 if (files == null || files!!.isEmpty()) {
-                    sLog.e("no file!")
+                    log.e("no file!")
                     return null
                 }
                 var file: File
@@ -138,7 +137,7 @@ class HttpTask private constructor() {
                     filePath = param.value
                     file = File(filePath)
                     if (!file.exists()) {
-                        sLog.w("file[\$filePath] not exist")
+                        log.w("file[\$filePath] not exist")
                         continue
                     }
                     val key = param.key
@@ -152,7 +151,7 @@ class HttpTask private constructor() {
                         mineType = getMimeTypeFromExtension(fileExtension)
                         fileName = "$key.$fileExtension"
                     }
-                    sLog.d("add upload file[\$key], key,fileName[\$fileName],fileExtension[\$fileExtension],mineType[\$mineType]")
+                    log.d("add upload file[\$key], key,fileName[\$fileName],fileExtension[\$fileExtension],mineType[\$mineType]")
                     bodyBuilder.addFormDataPart(
                         key,
                         fileName,
@@ -171,9 +170,9 @@ class HttpTask private constructor() {
                 val url = realUrl
                 val entrySet = params!!.entries
                 if (bodyType == BodyType.POST) {
-                    if (sType == Type.RAW_METHOD_APPEND_URL) {
+                    if (type == Type.RAW_METHOD_APPEND_URL) {
                         reqBuilder.url(url!!).post(RequestBody.create(JSON, jsonParam))
-                    } else if (sType == Type.FORM_METHOD_IN_FORMBODY) {
+                    } else if (type == Type.FORM_METHOD_IN_FORMBODY) {
                         val formBuilder = FormBody.Builder()
                         for ((key, value) in entrySet) {
                             if (value !is String) {
@@ -210,13 +209,13 @@ class HttpTask private constructor() {
             return reqBuilder.build()
         } catch (e: Exception) {
             e.printStackTrace()
-            sLog.e(e)
+            log.e(e)
         }
         return null
     }
 
     val realUrl: String?
-        get() = if (sType == Type.FORM_METHOD_IN_FORMBODY) {
+        get() = if (type == Type.FORM_METHOD_IN_FORMBODY) {
             url
         } else url + if (!TextUtils.isEmpty(method)) method else ""
     private val jsonParam: String
@@ -225,7 +224,7 @@ class HttpTask private constructor() {
                 return "{}"
             }
             try {
-                return sGson!!.toJson(params)
+                return gson!!.toJson(params)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -236,23 +235,23 @@ class HttpTask private constructor() {
     fun execute(iDataConverter: IDataConverter? = null): HttpTask {
         val request = dealRequest()
         if (request == null) {
-            sLog.e("request == null")
+            log.e("request == null")
             return this
         }
         startTimestamp = System.currentTimeMillis()
         onHttpStart()
-        sOkHttpClient.newCall(request).enqueue(object : Callback {
+        okHttpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
-                sLog.e(e)
+                log.e(e)
                 val msg = e.message
                 if (!TextUtils.isEmpty(msg) && isNetworkError(msg)) {
                     onHttpFailed(NETWORK_INVALID, NETWORK_ERROR)
                 } else {
                     onHttpFailed(FAILUE, SYSTEM_ERROR)
                 }
-                if (sRealExceptionCallback != null) {
-                    sRealExceptionCallback!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
+                if (realExceptionCallback != null) {
+                    realExceptionCallback!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
                 }
             }
 
@@ -260,24 +259,27 @@ class HttpTask private constructor() {
                 try {
                     calculateTimeDiff(response)
                     if (responseClass != null) {
-                        sLog.v("response[\${mResponseClass.getName()}]")
+                        log.v("response[\${mResponseClass.getName()}]")
                     }
-                    if (sResponseClass != null) {
-                        sLog.v("sResponse[\${sResponseClass.getName()}]")
+                    if (HttpTask.responseClass != null) {
+                        log.v("sResponse[\${sResponseClass.getName()}]")
                     }
                     if (response.isSuccessful) {
                         val result = response.body!!.string()
                         if (iDataConverter == null) {
-                            val httpResponse = sGson!!.fromJson<Any>(result, sResponseClass)
+                            val httpResponse = gson!!.fromJson<Any>(
+                                result,
+                                HttpTask.responseClass
+                            )
                             if (httpResponse !is IHttpResponse) {
-                                sLog.e("result[\$result]")
+                                log.e("result[\$result]")
                                 throw RuntimeException(
                                     "sResponseClass must implements " +
                                             "IHttpResponse"
                                 )
                             }
                             if (httpResponse.onGetCode() == 0) {
-                                onHttpSuccess(result, sGson!!.fromJson<Any>(result, responseClass))
+                                onHttpSuccess(result, gson!!.fromJson<Any>(result, responseClass))
                             } else {
                                 onHttpFailed(
                                     httpResponse.onGetCode(),
@@ -288,10 +290,10 @@ class HttpTask private constructor() {
                             onHttpSuccess(result, iDataConverter.doConvert(result, responseClass))
                         }
                     } else {
-                        sLog.e("http error status code[\${response.code()}]")
+                        log.e("http error status code[\${response.code()}]")
                         onHttpFailed(response.code, "")
-                        if (sRealExceptionCallback != null) {
-                            sRealExceptionCallback!!.onHttpTaskRealException(
+                        if (realExceptionCallback != null) {
+                            realExceptionCallback!!.onHttpTaskRealException(
                                 this@HttpTask, FAILUE,
                                 response.code.toString() + "," + response.message
                             )
@@ -299,10 +301,10 @@ class HttpTask private constructor() {
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    sLog.e(e)
+                    log.e(e)
                     onHttpFailed(FAILUE, SYSTEM_ERROR)
-                    if (sRealExceptionCallback != null) {
-                        sRealExceptionCallback!!.onHttpTaskRealException(
+                    if (realExceptionCallback != null) {
+                        realExceptionCallback!!.onHttpTaskRealException(
                             this@HttpTask,
                             FAILUE,
                             e.message
@@ -313,9 +315,9 @@ class HttpTask private constructor() {
                     val currTimestamp = System.currentTimeMillis()
                     val diff = currTimestamp - startTimestamp
                     if (diff > 2000) {
-                        sLog.w(method + "," + formatApiTime(diff))
+                        log.w(method + "," + formatApiTime(diff))
                     } else {
-                        sLog.i(method + "," + formatApiTime(diff))
+                        log.i(method + "," + formatApiTime(diff))
                     }
                 }
             }
@@ -346,7 +348,7 @@ class HttpTask private constructor() {
     private fun printUrlParams() {
         realUrl?.let { r ->
             params?.let { p ->
-                sLog.urlD(r, p)
+                log.urlD(r, p)
             }
         }
     }
@@ -386,7 +388,7 @@ class HttpTask private constructor() {
         }
         GlobalScope.launch(Dispatchers.Main) {
             if (globalDeal) {
-                sICommonErrorDeal?.onFailed(this@HttpTask, code, msg)
+                iCommonErrorDeal?.onFailed(this@HttpTask, code, msg)
             }
             beforeCallBack?.onFailed(this@HttpTask, code, msg)
             if (weakReferenceCallback) {
@@ -438,7 +440,7 @@ class HttpTask private constructor() {
 
     private fun getImportantMessage(message: String?): String {
         val sb = StringBuilder()
-        if (sDebug) {
+        if (debug) {
             sb.append("api:").append(method).append(",")
         }
         sb.append(message ?: SYSTEM_ERROR)
@@ -483,21 +485,21 @@ class HttpTask private constructor() {
         const val NETWORK_ERROR_CASE = "Failed to connect to"
         const val NETWORK_ERROR_CASE_1 = "Connection reset"
         val NETWORK_ERROR_CASE_LIST: MutableList<String> = ArrayList()
-        private var sDebug = false
+        private var debug = false
         lateinit var context: Application
             private set
-        private lateinit var sOkHttpClient: OkHttpClient
-        private var sGson: Gson? = null
-        private var sICommonHeadersAndParameters: ICommonHeadersAndParameters? = null
-        private var sICommonErrorDeal: ICommonErrorDeal? = null
-        var sRealExceptionCallback: RealExceptionCallback? = null
-        var sDynamicUrlCallback: DynamicUrlCallback? = null
-        var sClientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
-        var sUrl: String? = null
-        private var sTimeDiff: Long = 0
-        var sLog = Log()
-        private var sResponseClass: Class<*>? = null
-        private var sType = Type.RAW_METHOD_APPEND_URL
+        private lateinit var okHttpClient: OkHttpClient
+        private var gson: Gson? = null
+        private var iCommonHeadersAndParameters: ICommonHeadersAndParameters? = null
+        private var iCommonErrorDeal: ICommonErrorDeal? = null
+        var realExceptionCallback: RealExceptionCallback? = null
+        var dynamicUrlCallback: DynamicUrlCallback? = null
+        var clientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
+        var url: String? = null
+        private var timeDiff: Long = 0
+        var log = Log()
+        private var responseClass: Class<*>? = null
+        private var type = Type.RAW_METHOD_APPEND_URL
         var dynamicUrl = false
 
         @JvmOverloads
@@ -512,16 +514,16 @@ class HttpTask private constructor() {
             type: Type =
                 Type.RAW_METHOD_APPEND_URL, param: Param = Param()
         ) {
-            sDebug = isDebug
-            sLog.setFilterTag("[http]")
-            sLog.isEnabled = isDebug
+            debug = isDebug
+            log.setFilterTag("[http]")
+            log.isEnabled = isDebug
             Companion.context = context
-            sUrl = url
-            sICommonHeadersAndParameters = iCommonHeadersAndParameters
-            sICommonErrorDeal = iCommonErrorDeal
-            sResponseClass = responseClass
+            this.url = url
+            this.iCommonHeadersAndParameters = iCommonHeadersAndParameters
+            this.iCommonErrorDeal = iCommonErrorDeal
+            this.responseClass = responseClass
             val builder = OkHttpClient.Builder()
-            val loggingInterceptor = HttpLoggingInterceptor { message -> sLog.jsonV(message) }
+            val loggingInterceptor = HttpLoggingInterceptor { message -> log.jsonV(message) }
             loggingInterceptor.setLevel(if (isDebug) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE)
             builder.addInterceptor(loggingInterceptor)
             builder.connectTimeout(param.mConnectTimeout.toLong(), TimeUnit.SECONDS)
@@ -533,18 +535,18 @@ class HttpTask private constructor() {
                         val inputStream = context.assets.open(certificateAssetsName!!)
                         setTrust(builder, inputStream)
                     } else {
-                        sLog.w("notice that you choose trust all certificates")
+                        log.w("notice that you choose trust all certificates")
                         trustAllCerts(builder)
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                sLog.e(e)
+                log.e(e)
             }
-            sOkHttpClient = builder.build()
-            sGson = Gson()
-            sICommonHeadersAndParameters?.init(Companion.context)
-            sType = type
+            okHttpClient = builder.build()
+            gson = Gson()
+            this.iCommonHeadersAndParameters?.init(Companion.context)
+            this.type = type
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
         }
@@ -578,7 +580,8 @@ class HttpTask private constructor() {
             afterCallBack: FlowCallBack?
         ): HttpTask {
             return HttpTask().apply {
-                this.url = if (dynamicUrl) sDynamicUrlCallback?.onGetDynamicUrl() else sUrl
+                this.url =
+                    if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else this@Companion.url
                 this.method = method
                 this.params = params
                 this.responseClass = responseClass
@@ -595,19 +598,19 @@ class HttpTask private constructor() {
                 try {
                     SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(dateStr)
                         ?.let { date ->
-                            sTimeDiff = System.currentTimeMillis() - date.time
-                            sClientServerTimeDiffCallback?.onClientServerTimeDiff(sTimeDiff)
-                            sLog.v("local and server time differ [${sTimeDiff}]")
+                            timeDiff = System.currentTimeMillis() - date.time
+                            clientServerTimeDiffCallback?.onClientServerTimeDiff(timeDiff)
+                            log.v("local and server time differ [${timeDiff}]")
                         }
                 } catch (e: Exception) {
-                    sTimeDiff = 0
+                    timeDiff = 0
                     e.printStackTrace()
-                    sLog.e(e)
+                    log.e(e)
                 }
             }
         }
 
         val serverCurrentTimeMillis: Long
-            get() = System.currentTimeMillis() - sTimeDiff
+            get() = System.currentTimeMillis() - timeDiff
     }
 }

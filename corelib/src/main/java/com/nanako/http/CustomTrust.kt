@@ -17,8 +17,6 @@ package com.nanako.http
 
 import okhttp3.OkHttpClient.Builder
 import okhttp3.ConnectionSpec
-import com.nanako.http.CustomTrust
-import com.nanako.http.HttpTask
 import java.io.IOException
 import java.io.InputStream
 import java.lang.AssertionError
@@ -46,19 +44,19 @@ object CustomTrust {
             val sslSocketFactory = sslContext.socketFactory
             builder.sslSocketFactory(sslSocketFactory, trustManager)
             builder.hostnameVerifier(HostnameVerifier { s, sslSession ->
-                HttpTask.sLog.d("hostname[%s]")
+                HttpTask.log.d("hostname[%s]")
                 true
             })
             inputStream.close()
         } catch (e: GeneralSecurityException) {
             e.printStackTrace()
-            HttpTask.sLog.e(e)
+            HttpTask.log.e(e)
         } catch (e: IOException) {
             e.printStackTrace()
-            HttpTask.sLog.e(e)
+            HttpTask.log.e(e)
         } catch (e: Exception) {
             e.printStackTrace()
-            HttpTask.sLog.e(e)
+            HttpTask.log.e(e)
         }
     }
 
@@ -102,7 +100,7 @@ object CustomTrust {
         var index = 0
         for (certificate in certificates) {
             val certificateAlias = Integer.toString(index++)
-            HttpTask.sLog.d("[\$certificateAlias:\${certificate.getPublicKey().getAlgorithm()}]")
+            HttpTask.log.d("[\$certificateAlias:\${certificate.getPublicKey().getAlgorithm()}]")
             keyStore.setCertificateEntry(certificateAlias, certificate)
         }
 
@@ -165,7 +163,7 @@ object CustomTrust {
             val sslSocketFactory = sslContext.socketFactory
             builder.sslSocketFactory(sslSocketFactory, trustAllCerts[0])
             builder.hostnameVerifier(HostnameVerifier { hostname, session ->
-                HttpTask.sLog.d("hostname[%s]")
+                HttpTask.log.d("hostname[%s]")
                 true
             })
         } catch (e: NoSuchAlgorithmException) {
