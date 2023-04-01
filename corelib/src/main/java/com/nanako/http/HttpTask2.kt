@@ -6,6 +6,7 @@ import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.nanako.http.CustomTrust.setTrust
 import com.nanako.http.CustomTrust.trustAllCerts
 import com.nanako.log.Log
@@ -26,13 +27,13 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by Bond on 2016/4/13.
  */
-class HttpTask2 private constructor() {
+class HttpTask2 {
     var url: String? = null
     var method: String = ""
     var headers: Map<String, String>? = null
     var params: Map<String, Any>? = null
     var files: Map<String, String>? = null
-    var responseCls: Class<*>? = null
+    lateinit var responseCls: Class<Any>
     var beforeCallBack: HttpCallback? = null
     var afterCallBack: HttpCallback? = null
     var extraParams: MutableMap<String, Any>? = null
@@ -40,11 +41,12 @@ class HttpTask2 private constructor() {
     var defaultFileExtension = "jpg"
     var commonErrDeal = true
     var commonParam = true
-
-    private var bodyType = BodyType.POST
+    var dataConverter: DataConverter? = null
+    var type: Type = Type.RAW_METHOD_APPEND_URL
+    var bodyType = BodyType.POST
     private var startTimestamp: Long = 0
 
-    private enum class BodyType {
+    enum class BodyType {
         GET, POST, UPLOAD, PATCH, DELETE
     }
 
@@ -52,26 +54,8 @@ class HttpTask2 private constructor() {
         RAW_METHOD_APPEND_URL, FORM_METHOD_IN_FORMBODY
     }
 
-    fun get() {
-        bodyType = BodyType.GET
-    }
-
-    fun post() {
-        bodyType = BodyType.POST
-    }
-
-    fun patch() {
-        bodyType = BodyType.PATCH
-    }
-
-    fun delete() {
-        bodyType = BodyType.DELETE
-    }
-
-    fun upload(files: Map<String, String>?) {
-        bodyType = BodyType.UPLOAD
-        this.files = files
-        commonParam = false
+    init {
+        url = if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else HttpTask2.url
     }
 
     private fun getRequest(): Request? {
@@ -182,14 +166,15 @@ class HttpTask2 private constructor() {
     }
 
     @JvmOverloads
-    fun <T : Any> execute(iDataConverter: IDataConverter? = null): MutableLiveData<T>? {
+    fun <T : Any> execute(
+        responseLd: MutableLiveData<T>
+    ) {
         val request = getRequest()
         if (request == null) {
             log.e("request == null")
-            return null
+            return
         }
         val host = this
-        val mld = MutableLiveData<T>()
         startTimestamp = System.currentTimeMillis()
         onHttpStart()
         okHttpClient.newCall(request).enqueue(object : Callback {
@@ -198,9 +183,9 @@ class HttpTask2 private constructor() {
                 log.e(e)
                 val msg = e.message
                 if (!TextUtils.isEmpty(msg) && isNetworkError(msg)) {
-                    onHttpFailed(NETWORK_INVALID, NETWORK_ERROR, mld)
+                    onHttpFailed(NETWORK_INVALID, NETWORK_ERROR, responseLd)
                 } else {
-                    onHttpFailed(FAILUE, SYSTEM_ERROR, mld)
+                    onHttpFailed(FAILUE, SYSTEM_ERROR, responseLd)
                 }
                 realExceptionCallback?.onHttpTaskRealException(host, FAILUE, msg)
             }
@@ -208,23 +193,25 @@ class HttpTask2 private constructor() {
             override fun onResponse(call: Call, response: Response) {
                 try {
                     calculateTimeDiff(response)
-                    responseCls?.let {
-                        log.v("response[${it.name}]")
-                    }
+                    log.v("response[${responseCls.name}]")
                     if (response.isSuccessful) {
                         val result = response.body!!.string()
-                        if (iDataConverter == null) {
-                            onHttpSuccess(result, gson.fromJson(result, responseCls) as T, mld)
+                        if (dataConverter == null) {
+                            onHttpSuccess(
+                                result,
+                                gson.fromJson(result, responseCls) as T,
+                                responseLd
+                            )
                         } else {
                             onHttpSuccess(
                                 result,
-                                iDataConverter.doConvert(result, responseCls) as T,
-                                mld
+                                dataConverter!!.doConvert(result, responseCls) as T,
+                                responseLd
                             )
                         }
                     } else {
                         log.e("http error status code[${response.code}]")
-                        onHttpFailed(FAILUE, SYSTEM_ERROR, mld)
+                        onHttpFailed(FAILUE, SYSTEM_ERROR, responseLd)
                         realExceptionCallback?.onHttpTaskRealException(
                             host, FAILUE,
                             response.code.toString() + "," + response.message
@@ -233,7 +220,7 @@ class HttpTask2 private constructor() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                     log.e(e)
-                    onHttpFailed(FAILUE, SYSTEM_ERROR, mld)
+                    onHttpFailed(FAILUE, SYSTEM_ERROR, responseLd)
                     realExceptionCallback?.onHttpTaskRealException(host, FAILUE, e.message)
                 } finally {
                     response.close()
@@ -247,7 +234,6 @@ class HttpTask2 private constructor() {
                 }
             }
         })
-        return mld
     }
 
     private fun fullUrl(): String {
@@ -331,8 +317,8 @@ class HttpTask2 private constructor() {
         fun onFailed(ht: HttpTask2, code: Int, msg: String?)
     }
 
-    interface IDataConverter {
-        fun doConvert(dataStr: String?, responseCls: Class<*>?): Any
+    interface DataConverter {
+        fun doConvert(dataStr: String?, responseCls: java.lang.reflect.Type): Any
     }
 
     interface CommonHeadersAndParameters {
@@ -443,24 +429,6 @@ class HttpTask2 private constructor() {
             this.type = type
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
-        }
-
-        fun create(
-            method: String,
-            params: Map<String, Any>? = null,
-            responseCls: Class<*>,
-            beforeCallBack: HttpCallback? = null,
-            afterCallBack: HttpCallback? = null
-        ): HttpTask2 {
-            return HttpTask2().apply {
-                this.url =
-                    if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else this@Companion.url
-                this.method = method
-                this.params = params
-                this.responseCls = responseCls
-                this.beforeCallBack = beforeCallBack
-                this.afterCallBack = afterCallBack
-            }
         }
 
         private fun calculateTimeDiff(response: Response) {

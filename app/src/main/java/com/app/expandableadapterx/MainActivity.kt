@@ -1,15 +1,11 @@
 package com.app.expandableadapterx
 
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import android.view.Menu
-import android.view.MenuItem
+import androidx.lifecycle.MutableLiveData
 import com.app.expandableadapterx.databinding.ActivityMainBinding
+import com.google.gson.reflect.TypeToken
 import com.nanako.http.HttpTask2
 import com.nanako.log.Log
 import com.nanako.log.Log.Companion.LOG
@@ -34,11 +30,13 @@ class MainActivity : AppCompatActivity() {
         LOG.i(Util.replaceChar("1234567", 0, 2, 10, "*"))
         LOG.i(Util.replaceChar(null, 0, 2, 10, "*"))
 
-        HttpTask2.create("", null, TestModel::class.java).apply {
-            get()
-            execute<TestModel>()?.observe(this@MainActivity) {
+        val type = object :TypeToken<TestModel>(){}.type
+        HttpTask2.log.isEnabled=true
+        testHttp()
+    }
 
-            }
-        }
+
+    private fun testHttp() {
+
     }
 }
