@@ -54,6 +54,8 @@ class HttpTask2 {
     }
 
     init {
+        type = HttpTask2.type
+        bodyType = HttpTask2.bodyType
         url = if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else HttpTask2.url
     }
 
@@ -381,6 +383,7 @@ class HttpTask2 {
         var url: String? = null
         var log = Log()
         var type = Type.RAW_METHOD_APPEND_URL
+        var bodyType = BodyType.POST
         var dynamicUrl = false
 
         @JvmOverloads
