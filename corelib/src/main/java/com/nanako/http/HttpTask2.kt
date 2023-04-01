@@ -6,7 +6,6 @@ import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.nanako.http.CustomTrust.setTrust
 import com.nanako.http.CustomTrust.trustAllCerts
 import com.nanako.log.Log
