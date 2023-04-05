@@ -18,6 +18,7 @@ android {
     defaultConfig {
         minSdk rootProject.ext.min_sdk_version
         targetSdk rootProject.ext.max_sdk_version
+        versionName "2.0.8"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -36,6 +37,12 @@ android {
     }
     buildFeatures {
         dataBinding = true
+    }
+
+    android.libraryVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "xlib_${defaultConfig.versionName}"+'.aar'
+        }
     }
 }
 
