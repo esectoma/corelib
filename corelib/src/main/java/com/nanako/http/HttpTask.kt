@@ -114,7 +114,7 @@ class HttpTask private constructor() {
                     params
                 )
                 this.headers = headers
-                if (headers != null && !headers.isEmpty()) {
+                if (headers != null && headers.isNotEmpty()) {
                     for ((key, value) in headers) {
                         reqBuilder.addHeader(key, value)
                     }
@@ -183,7 +183,7 @@ class HttpTask private constructor() {
                         reqBuilder.url(url!!).post(formBuilder.build())
                     }
                 } else if (bodyType == BodyType.GET || bodyType == BodyType.DELETE) {
-                    var urlBuilder = StringBuilder(url)
+                    var urlBuilder = StringBuilder(url!!)
                     urlBuilder.append("?")
                     for ((key, value) in entrySet) {
                         urlBuilder.append(key)
