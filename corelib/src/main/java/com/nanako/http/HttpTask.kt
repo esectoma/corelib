@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by Bond on 2016/4/13.
  */
-@Deprecated("see HttpTask2")
 class HttpTask private constructor() {
     var url: String? = null
     var method: String = ""
