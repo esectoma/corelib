@@ -41,7 +41,7 @@ android {
 
     android.libraryVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "xlib-${defaultConfig.versionName}"+'.aar'
+            outputFileName = "corelib-${defaultConfig.versionName}"+'.aar'
         }
     }
 }
