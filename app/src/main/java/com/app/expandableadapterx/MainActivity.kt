@@ -6,7 +6,6 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.lifecycle.MutableLiveData
 import com.app.expandableadapterx.databinding.ActivityMainBinding
 import com.google.gson.reflect.TypeToken
-import com.nanako.http.HttpTask2
 import com.nanako.log.Log
 import com.nanako.log.Log.Companion.LOG
 import com.nanako.util.Util
@@ -31,7 +30,6 @@ class MainActivity : AppCompatActivity() {
         LOG.i(Util.replaceChar(null, 0, 2, 10, "*"))
 
         val type = object :TypeToken<TestModel>(){}.type
-        HttpTask2.log.isEnabled=true
         testHttp()
     }
 

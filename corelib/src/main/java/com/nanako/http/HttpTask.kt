@@ -164,14 +164,14 @@ class HttpTask private constructor() {
                 for ((key, value) in entrySet) {
                     bodyBuilder.addFormDataPart(key!!, value.toString())
                 }
-                val url = realUrl
+                val url = fullUrl()
                 reqBuilder.url(url!!).post(bodyBuilder.build())
             } else {
-                val url = realUrl
+                val url = fullUrl()
                 val entrySet = params!!.entries
                 if (bodyType == BodyType.POST) {
                     if (type == Type.RAW_METHOD_APPEND_URL) {
-                        reqBuilder.url(url!!).post(RequestBody.create(JSON, jsonParam))
+                        reqBuilder.url(url!!).post(RequestBody.create(JSON, jsonParam()))
                     } else if (type == Type.FORM_METHOD_IN_FORMBODY) {
                         val formBuilder = FormBody.Builder()
                         for ((key, value) in entrySet) {
@@ -203,7 +203,7 @@ class HttpTask private constructor() {
                         reqBuilder.delete()
                     }
                 } else if (bodyType == BodyType.PATCH) {
-                    reqBuilder.url(url!!).patch(RequestBody.create(JSON, jsonParam))
+                    reqBuilder.url(url!!).patch(RequestBody.create(JSON, jsonParam()))
                 }
             }
             return reqBuilder.build()
@@ -214,22 +214,25 @@ class HttpTask private constructor() {
         return null
     }
 
-    val realUrl: String?
-        get() = if (type == Type.FORM_METHOD_IN_FORMBODY) {
+    private fun fullUrl(): String? {
+        return if (type == Type.FORM_METHOD_IN_FORMBODY) {
             url
-        } else url + if (!TextUtils.isEmpty(method)) method else ""
-    private val jsonParam: String
-        get() {
-            if (params == null || params!!.isEmpty()) {
-                return "{}"
-            }
-            try {
-                return gson!!.toJson(params)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+        } else {
+            url + if (!TextUtils.isEmpty(method)) method else ""
+        }
+    }
+
+    private fun jsonParam(): String {
+        if (params == null || params!!.isEmpty()) {
             return "{}"
         }
+        try {
+            return gson!!.toJson(params)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return "{}"
+    }
 
     @JvmOverloads
     fun execute(iDataConverter: IDataConverter? = null): HttpTask {
@@ -345,7 +348,7 @@ class HttpTask private constructor() {
     }
 
     private fun printUrlParams() {
-        realUrl?.let { r ->
+        fullUrl()?.let { r ->
             params?.let { p ->
                 log.urlD(r, p)
             }
