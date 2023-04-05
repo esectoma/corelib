@@ -137,7 +137,7 @@ class HttpTask private constructor() {
                     filePath = param.value
                     file = File(filePath)
                     if (!file.exists()) {
-                        log.w("file[\$filePath] not exist")
+                        log.w("file[$filePath] not exist")
                         continue
                     }
                     val key = param.key
@@ -151,7 +151,7 @@ class HttpTask private constructor() {
                         mineType = getMimeTypeFromExtension(fileExtension)
                         fileName = "$key.$fileExtension"
                     }
-                    log.d("add upload file[\$key], key,fileName[\$fileName],fileExtension[\$fileExtension],mineType[\$mineType]")
+                    log.d("add upload file[$key], key,fileName[$fileName],fileExtension[$fileExtension],mineType[$mineType]")
                     bodyBuilder.addFormDataPart(
                         key,
                         fileName,
@@ -259,10 +259,10 @@ class HttpTask private constructor() {
                 try {
                     calculateTimeDiff(response)
                     if (responseClass != null) {
-                        log.v("response[\${mResponseClass.getName()}]")
+                        log.v("response[${responseClass?.name}]")
                     }
                     if (HttpTask.responseClass != null) {
-                        log.v("sResponse[\${sResponseClass.getName()}]")
+                        log.v("sResponse[${HttpTask.responseClass?.name}]")
                     }
                     if (response.isSuccessful) {
                         val result = response.body!!.string()
@@ -272,10 +272,9 @@ class HttpTask private constructor() {
                                 HttpTask.responseClass
                             )
                             if (httpResponse !is IHttpResponse) {
-                                log.e("result[\$result]")
+                                log.e("result[$result]")
                                 throw RuntimeException(
-                                    "sResponseClass must implements " +
-                                            "IHttpResponse"
+                                    "sResponseClass must implements IHttpResponse"
                                 )
                             }
                             if (httpResponse.onGetCode() == 0) {
@@ -290,7 +289,7 @@ class HttpTask private constructor() {
                             onHttpSuccess(result, iDataConverter.doConvert(result, responseClass))
                         }
                     } else {
-                        log.e("http error status code[\${response.code()}]")
+                        log.e("http error status code[${response.code}]")
                         onHttpFailed(FAILUE, SYSTEM_ERROR)
                         if (realExceptionCallback != null) {
                             realExceptionCallback!!.onHttpTaskRealException(
