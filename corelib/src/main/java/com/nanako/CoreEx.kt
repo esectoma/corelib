@@ -14,7 +14,7 @@ fun Float.dp(context: Context): Float = this * context.resources.displayMetrics.
 
 fun Double.dp(context: Context): Double = this * context.resources.displayMetrics.density + 0.5f
 
-fun Int.sp(context: Context): Float = this / context.resources.displayMetrics.scaledDensity + 0.5f
+fun Int.sp(context: Context): Float = this * context.resources.displayMetrics.scaledDensity + 0.5f
 
 fun Float.sp(context: Context): Float = this / context.resources.displayMetrics.scaledDensity + 0.5f
 
