@@ -20,8 +20,8 @@ class EventManager private constructor() {
     }
 
     fun notify(event: Any) {
-        for (listener in listeners) {
-            listener.onEvent(event)
+        for (i in listeners.size - 1 downTo 0) {
+            listeners[i].onEvent(event)
         }
     }
 
