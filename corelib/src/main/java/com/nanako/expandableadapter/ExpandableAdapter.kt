@@ -1,6 +1,6 @@
 package com.nanako.expandableadapter
 
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -25,7 +25,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     override fun getItemViewType(position: Int): Int {
         val vt = onGetItemViewType(mList[position])
         return if (vt == -1) {
-            LOG.e("${mList[position].javaClass.name} itemViewType is -1 ???")
+            log.e("${mList[position].javaClass.name} itemViewType is -1 ???")
             super.getItemViewType(position)
         } else {
             vt
@@ -65,7 +65,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         } else if (footerCount > 0 && itemPosition >= mList.size - footerCount) {
             footerCount--
         } else {
-            LOG.w("Remove item failed!")
+            log.w("Remove item failed!")
             return
         }
         mList.removeAt(itemPosition)
@@ -75,10 +75,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun swapItem(sourcePosition: Int, targetPosition: Int) {
         val itemCount = itemCount
         if (sourcePosition < 0 || sourcePosition >= itemCount) {
-            LOG.e("Invalid sourcePosition $sourcePosition")
+            log.e("Invalid sourcePosition $sourcePosition")
             return
         } else if (targetPosition < 0 || targetPosition >= itemCount) {
-            LOG.e("Invalid targetPosition $targetPosition")
+            log.e("Invalid targetPosition $targetPosition")
             return
         }
         Collections.swap(mList, sourcePosition, targetPosition)
@@ -118,7 +118,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun setHeader(beginIndex: Int, endIndex: Int, newHeaderList: List<Any>) {
         if (beginIndex < 0 || endIndex < 0 || beginIndex > endIndex) {
-            LOG.e("beginIndex $beginIndex, endIndex $endIndex !!!")
+            log.e("beginIndex $beginIndex, endIndex $endIndex !!!")
             return
         }
         val pendingSetCount = endIndex - beginIndex + 1
@@ -167,10 +167,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     private fun addHeader(headerPosition: Int, header: Any?, headerList: List<Any>?): Int {
         var headerPosition = headerPosition
         if (headerPosition < 0) {
-            LOG.e("Invalid header position $headerPosition")
+            log.e("Invalid header position $headerPosition")
             return -1
         } else if (header == null && (headerList == null || headerList.isEmpty())) {
-            LOG.e("Invalid header parameter")
+            log.e("Invalid header parameter")
             return -1
         }
         if (headerPosition > headerCount) {
@@ -184,7 +184,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             mList.addAll(itemPosition, headerList!!)
             headerList.size
         }
-        LOG.v("Notify item from $itemPosition, count is $itemAddSize")
+        log.v("Notify item from $itemPosition, count is $itemAddSize")
         headerCount += itemAddSize
         notifyItemRangeInserted(itemPosition, itemAddSize)
         return headerPosition
@@ -193,7 +193,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun removeHeader(header: Any) {
         val itemPosition = mList.indexOf(header)
         if (itemPosition == -1) {
-            LOG.e("Remove header fiiled for not finding the header position")
+            log.e("Remove header fiiled for not finding the header position")
             return
         }
         mList.removeAt(itemPosition)
@@ -225,7 +225,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (!checkHeaderPosition(headerBeginPosition)) {
             return
         } else if (removeCount <= 0) {
-            LOG.e("Invalid header removeCount $removeCount")
+            log.e("Invalid header removeCount $removeCount")
             return
         }
         var itemEndPosition = headerBeginPosition + removeCount
@@ -233,7 +233,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             itemEndPosition = headerCount
             val oldRemoveCount = removeCount
             removeCount = itemEndPosition - headerBeginPosition
-            LOG.i("Reset removeCount from $oldRemoveCount to $removeCount")
+            log.i("Reset removeCount from $oldRemoveCount to $removeCount")
         }
         mList.subList(headerBeginPosition, itemEndPosition).clear()
         notifyItemRangeRemoved(headerBeginPosition, removeCount)
@@ -242,7 +242,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun getHeaders(): List<Any>? {
         if (headerCount <= 0 || itemCount <= 0) {
-            LOG.w("No header items")
+            log.w("No header items")
             return null
         }
         return ArrayList(mList.subList(0, headerCount))
@@ -301,10 +301,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     private fun checkHeaderPosition(headerPosition: Int): Boolean {
         if (headerPosition < 0) {
-            LOG.w("Invalid header position $headerPosition")
+            log.w("Invalid header position $headerPosition")
             return false
         } else if (headerPosition >= headerCount) {
-            LOG.w("Invalid header position $headerPosition, header size is $headerCount")
+            log.w("Invalid header position $headerPosition, header size is $headerCount")
             return false
         }
         return true
@@ -338,7 +338,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun setChild(beginIndex: Int, endIndex: Int, newChildList: List<Any>) {
         if (beginIndex < 0 || endIndex < 0 || beginIndex > endIndex) {
-            LOG.e("beginIndex $beginIndex, endIndex $endIndex !!!")
+            log.e("beginIndex $beginIndex, endIndex $endIndex !!!")
             return
         }
         val pendingSetCount = endIndex - beginIndex + 1
@@ -384,10 +384,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun addChild(childPosition: Int, child: Any?, childList: List<Any>? = null): Int {
         var childPosition = childPosition
         if (childPosition < 0) {
-            LOG.e("Invalid child position $childPosition")
+            log.e("Invalid child position $childPosition")
             return -1
         } else if (null == child && (null == childList || childList.isEmpty())) {
-            LOG.e("Invalid child parameter")
+            log.e("Invalid child parameter")
             return -1
         }
         if (childPosition > childCount) {
@@ -402,7 +402,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             mList.addAll(itemPosition, childList!!)
             childList.size
         }
-        LOG.v("Notify item from $itemPosition, count is $addSize")
+        log.v("Notify item from $itemPosition, count is $addSize")
         childCount += addSize
         notifyItemRangeInserted(itemPosition, addSize)
         return childPosition
@@ -415,7 +415,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun removeChild(child: Any) {
         val itemPosition = indexOfChild(child)
         if (itemPosition == -1) {
-            LOG.e("Remove the child failed for not finding the child position")
+            log.e("Remove the child failed for not finding the child position")
             return
         }
         mList.removeAt(itemPosition)
@@ -443,7 +443,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (!checkChildPosition(childBeginPosition)) {
             return
         } else if (removeCount <= 0) {
-            LOG.e("Invalid child removeCount $removeCount")
+            log.e("Invalid child removeCount $removeCount")
             return
         }
         val itemBeginPosition = convertChildPosition(childBeginPosition)
@@ -453,7 +453,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             itemEndPosition = headerChildCount
             val oldRemoveCount = removeCount
             removeCount = itemEndPosition - itemBeginPosition
-            LOG.i("Reset child removeCount from $oldRemoveCount to $removeCount")
+            log.i("Reset child removeCount from $oldRemoveCount to $removeCount")
         }
         mList.subList(itemBeginPosition, itemEndPosition).clear()
         childCount -= removeCount
@@ -462,7 +462,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun getChilds(): List<Any>? {
         if (childCount <= 0 || itemCount <= 0) {
-            LOG.w("No child items")
+            log.w("No child items")
             return null
         }
         return ArrayList(mList.subList(headerCount, headerCount + childCount))
@@ -523,10 +523,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     private fun checkChildPosition(childPosition: Int): Boolean {
         if (childPosition < 0) {
-            LOG.w("Invalid child position $childPosition")
+            log.w("Invalid child position $childPosition")
             return false
         } else if (childPosition >= childCount) {
-            LOG.w("invalid child position $childPosition, child size is $childCount")
+            log.w("invalid child position $childPosition, child size is $childCount")
             return false
         }
         return true
@@ -534,7 +534,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun getChildPosition(itemPosition: Int): Int {
         if (!checkItemPosition(itemPosition)) {
-            LOG.e("invalid adapterPosition $itemPosition")
+            log.e("invalid adapterPosition $itemPosition")
             return -1
         } else if (childCount <= 0 || itemPosition >= headerCount + childCount) {
             return -1
@@ -578,14 +578,14 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun addGroup(groupPosition: Int, group: Any): Int {
         var groupPosition = groupPosition
         if (groupPosition < 0) {
-            LOG.e("Invalid group position $groupPosition")
+            log.e("Invalid group position $groupPosition")
             return -1
         } else if (indexOfGroup(group) != -1) {
-            LOG.e("Group is alread exist! You must use a different object to create a new group")
+            log.e("Group is alread exist! You must use a different object to create a new group")
             return -1
         }
         if (groupPosition > groupCount) {
-            LOG.w("Reset group position from $groupPosition to $groupCount")
+            log.w("Reset group position from $groupPosition to $groupCount")
             groupPosition = groupCount
         }
         var itemPosition = 0
@@ -624,7 +624,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun clearGroup(beginIndex: Int) {
         if (beginIndex >= groupCount) {
-            LOG.w("clearGroup,beginIndex[$beginIndex] >= groupCount[$groupCount]")
+            log.w("clearGroup,beginIndex[$beginIndex] >= groupCount[$groupCount]")
             return
         }
         for (i in beginIndex until groupCount) {
@@ -675,7 +675,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun getGroupPosition(itemPosition: Int): Int {
         if (!checkItemPosition(itemPosition) || itemPosition < headerCount + childCount) {
-            LOG.e("Invalid itemPosition $itemPosition")
+            log.e("Invalid itemPosition $itemPosition")
             return -1
         }
         var groupPosition = -1
@@ -694,7 +694,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun convertGroupPosition(groupPosition: Int): Int {
         if (!checkGroupPosition(groupPosition)) {
-            LOG.e("Invalid group position $groupPosition")
+            log.e("Invalid group position $groupPosition")
             return -1
         }
         var itemPosition = 0
@@ -723,7 +723,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     @JvmOverloads
     fun notifyGroupChanged(groupPosition: Int, notNotifyGroup: Boolean = true): Int {
         if (!checkGroupPosition(groupPosition)) {
-            LOG.e("Invalid group position $groupPosition")
+            log.e("Invalid group position $groupPosition")
             return -1
         }
         if (!notNotifyGroup) {
@@ -738,10 +738,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     private fun checkGroupPosition(groupPosition: Int): Boolean {
         if (groupPosition < 0) {
-            LOG.w("Invalid group position $groupPosition")
+            log.w("Invalid group position $groupPosition")
             return false
         } else if (groupPosition >= groupCount) {
-            LOG.w("Invalid group position $groupPosition, group size is $groupCount")
+            log.w("Invalid group position $groupPosition, group size is $groupCount")
             return false
         }
         return true
@@ -814,10 +814,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (!checkGroupPosition(groupPosition)) {
             return intArrayOf(-1, -1)
         } else if (groupChild == null && (groupChildList == null || groupChildList.isEmpty())) {
-            LOG.e("Invalid group child mList")
+            log.e("Invalid group child mList")
             return intArrayOf(-1, -1)
         } else if (groupChildPosition < 0) {
-            LOG.e("Invalid child position $groupChildPosition")
+            log.e("Invalid child position $groupChildPosition")
             return intArrayOf(-1, -1)
         }
         val oldGroupChildCount = groupChildCounts!![groupPosition]
@@ -855,7 +855,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (p != -1) {
             removeGroupChild(groupPosition, p)
         } else {
-            LOG.w("No groupChild for viewType $viewType")
+            log.w("No groupChild for viewType $viewType")
         }
     }
 
@@ -868,7 +868,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             if (p != -1) {
                 removeGroupChild(groupPosition, p)
             } else {
-                LOG.w("No groupChild for viewType $viewType")
+                log.w("No groupChild for viewType $viewType")
                 break
             }
         }
@@ -896,7 +896,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             return
         }
         if (removeCount <= 0) {
-            LOG.e("Invalid group remove count $removeCount")
+            log.e("Invalid group remove count $removeCount")
             return
         }
         val groupChildCount = groupChildCounts!![groupPosition]
@@ -905,9 +905,9 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             val oldRemoveCount = removeCount
             removeCount = groupChildCount - groupChildBeingPosition
             groupChildEnd = groupChildCount
-            LOG.i("Reset group removeCount from $oldRemoveCount to $removeCount")
+            log.i("Reset group removeCount from $oldRemoveCount to $removeCount")
         }
-        LOG.d("groupPosition=$groupPosition, childStarPosition=$groupChildBeingPosition, count=$removeCount, childEnd=$groupChildEnd")
+        log.d("groupPosition=$groupPosition, childStarPosition=$groupChildBeingPosition, count=$removeCount, childEnd=$groupChildEnd")
         val itemPosition = convertGroupPosition(groupPosition)
         val itemBeginPosition = itemPosition + groupChildBeingPosition + 1
         mList.subList(itemBeginPosition, itemBeginPosition + removeCount).clear()
@@ -978,14 +978,14 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     private fun checkGroupChildPosition(groupPosition: Int, groupChildPosition: Int): Boolean {
         var groupChildCount: Int
         if (groupChildPosition < 0) {
-            LOG.w("Invalid group child position $groupPosition, $groupChildPosition")
+            log.w("Invalid group child position $groupPosition, $groupChildPosition")
             return false
         } else if (!checkGroupPosition(groupPosition)) {
             return false
         } else if (groupChildPosition >= groupChildCounts!![groupPosition].also {
                 groupChildCount = it
             }) {
-            LOG.w("Invalid group child position $groupPosition, $groupChildPosition, group $groupPosition child size is $groupChildCount")
+            log.w("Invalid group child position $groupPosition, $groupChildPosition, group $groupPosition child size is $groupChildCount")
             return false
         }
         return true
@@ -994,7 +994,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     fun getGroupChildPosition(itemPosition: Int): IntArray {
         val groupChildPosition = intArrayOf(-1, -1)
         if (!checkItemPosition(itemPosition)) {
-            LOG.e("Invalid item position $itemPosition")
+            log.e("Invalid item position $itemPosition")
             return groupChildPosition
         }
         if (groupCount > 0) {
@@ -1079,7 +1079,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun setFooter(beginIndex: Int, endIndex: Int, newFooterList: List<Any>) {
         if (beginIndex < 0 || endIndex < 0 || beginIndex > endIndex) {
-            LOG.e("beginIndex $beginIndex, endIndex $endIndex !!!")
+            log.e("beginIndex $beginIndex, endIndex $endIndex !!!")
             return
         }
         val pendingSetCount = endIndex - beginIndex + 1
@@ -1128,10 +1128,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     private fun addFooter(footerPosition: Int, footer: Any?, footerList: List<Any>?): Int {
         var footerPosition = footerPosition
         if (footerPosition < 0) {
-            LOG.e("Invalid footer position $footerPosition")
+            log.e("Invalid footer position $footerPosition")
             return -1
         } else if (footer == null && (null == footerList || footerList.isEmpty())) {
-            LOG.e("Wrong footer param")
+            log.e("Wrong footer param")
             return -1
         }
         val oldFooterCount = footerCount
@@ -1147,7 +1147,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             mList.addAll(itemPosition, footerList!!)
             footerList.size
         }
-        LOG.v("Notify item from $itemPosition, count is $addSize")
+        log.v("Notify item from $itemPosition, count is $addSize")
         footerCount += addSize
         notifyItemRangeInserted(itemPosition, addSize)
         return footerPosition
@@ -1190,7 +1190,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             footerItemEndPosition = mList.size
             val oldRemoveCount = removeCount
             removeCount = footerItemEndPosition - footerItemBeginPosition
-            LOG.i("Reset removeCount from $oldRemoveCount to $removeCount")
+            log.i("Reset removeCount from $oldRemoveCount to $removeCount")
         }
         mList.subList(footerItemBeginPosition, footerItemEndPosition).clear()
         footerCount -= removeCount
@@ -1227,10 +1227,10 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     private fun checkFooterPosition(footerPosition: Int): Boolean {
         if (footerPosition < 0) {
-            LOG.w("Invalid footer position $footerPosition")
+            log.w("Invalid footer position $footerPosition")
             return false
         } else if (footerPosition >= footerCount) {
-            LOG.w("Invalid footer position $footerPosition, footer size is $footerCount")
+            log.w("Invalid footer position $footerPosition, footer size is $footerCount")
             return false
         }
         return true
@@ -1238,7 +1238,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     fun getFooterPosition(itemPosition: Int): Int {
         if (!checkItemPosition(itemPosition)) {
-            LOG.e("Invalid item position $itemPosition")
+            log.e("Invalid item position $itemPosition")
             return -1
         } else if (footerCount <= 0) {
             return -1
@@ -1278,7 +1278,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
     private fun checkItemPosition(itemPosition: Int): Boolean {
         val itemCount = itemCount
         if (itemPosition < 0 || itemPosition >= itemCount) {
-            LOG.e("Invalid itemPosition $itemPosition, item count is $itemCount")
+            log.e("Invalid itemPosition $itemPosition, item count is $itemCount")
             return false
         }
         return true
@@ -1334,7 +1334,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (p != -1) {
             removeHeader(p)
         } else {
-            LOG.w("No header's viewType is $viewType")
+            log.w("No header's viewType is $viewType")
         }
     }
 
@@ -1344,7 +1344,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             if (p != -1) {
                 removeHeader(p)
             } else {
-                LOG.w("No header's viewType is $viewType")
+                log.w("No header's viewType is $viewType")
                 break
             }
         }
@@ -1396,7 +1396,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (p != -1) {
             removeChild(p)
         } else {
-            LOG.w("No child's viewType is $viewType")
+            log.w("No child's viewType is $viewType")
         }
     }
 
@@ -1406,7 +1406,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             if (p != -1) {
                 removeChild(p)
             } else {
-                LOG.w("No child's viewType is $viewType")
+                log.w("No child's viewType is $viewType")
                 break
             }
         }
@@ -1451,7 +1451,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (-1 != gpos) {
             removeGroup(gpos)
         } else {
-            LOG.w("no group's viewType is $viewType")
+            log.w("no group's viewType is $viewType")
         }
     }
 
@@ -1461,7 +1461,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             if (-1 != gpos) {
                 removeGroup(gpos)
             } else {
-                LOG.w("no group's viewType is $viewType")
+                log.w("no group's viewType is $viewType")
                 break
             }
         }
@@ -1510,7 +1510,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
         if (p != -1) {
             removeFooter(p)
         } else {
-            LOG.w("no footer's viewType is $viewType")
+            log.w("no footer's viewType is $viewType")
         }
     }
 
@@ -1520,7 +1520,7 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
             if (p != -1) {
                 removeFooter(p)
             } else {
-                LOG.w("no footer's viewType is $viewType")
+                log.w("no footer's viewType is $viewType")
                 break
             }
         }
@@ -1549,12 +1549,12 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
      */
     private fun getPosition(type: Int, viewTypes: List<Int>?, currViewType: Int): Int {
         if (viewTypes == null || viewTypes.isEmpty()) {
-            LOG.w("Please call method setXXXViewTypePositionConstraints")
+            log.w("Please call method setXXXViewTypePositionConstraints")
             return -1
         }
         val currViewTypePosition = viewTypes.indexOf(currViewType)
         if (currViewTypePosition == -1) {
-            LOG.w("ViewType %d not find in XXX constraint viewType list")
+            log.w("ViewType %d not find in XXX constraint viewType list")
             return -1
         }
         if (currViewTypePosition == 0) {

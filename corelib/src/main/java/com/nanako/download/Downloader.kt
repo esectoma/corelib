@@ -15,7 +15,7 @@ import java.io.File
 import java.lang.Exception
 import java.lang.StringBuilder
 import java.util.ArrayList
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 
 class Downloader private constructor(private val mContext: Context) {
     private val listeners: MutableList<Listener> = ArrayList()
@@ -32,7 +32,7 @@ class Downloader private constructor(private val mContext: Context) {
                         doAddTask(task)
                     } catch (e: Exception) {
                         e.printStackTrace()
-                        LOG.e(e)
+                        log.e(e)
                     }
                 }
             }
@@ -52,7 +52,7 @@ class Downloader private constructor(private val mContext: Context) {
         val file = File(task.getFileTargetDestination(mContext))
         if (file.exists()) {
             if (!task.isReDownloadWhenExist) {
-                LOG.w("target file[${file.absolutePath}] exist")
+                log.w("target file[${file.absolutePath}] exist")
                 notifyListener(Existed(task))
                 return
             }
@@ -84,7 +84,7 @@ class Downloader private constructor(private val mContext: Context) {
         }
         task.downloadId = downloadManager.enqueue(request)
         tasks.add(task)
-        LOG.d("add download task：${Task.toString(mContext, task)}")
+        log.d("add download task：${Task.toString(mContext, task)}")
         checkMonitorDownloadStatus()
     }
 
@@ -99,7 +99,7 @@ class Downloader private constructor(private val mContext: Context) {
                 if (removeFile) {
                     downloadManager.remove(t.downloadId)
                 }
-                LOG.d("remove download task：${Task.toString(mContext, t)}")
+                log.d("remove download task：${Task.toString(mContext, t)}")
                 break
             }
         }
@@ -108,7 +108,7 @@ class Downloader private constructor(private val mContext: Context) {
     private fun checkMonitorDownloadStatus() {
         backHandler.removeCallbacks(mCheckDownloadStatusRunn)
         if (tasks.isEmpty()) {
-            LOG.w("no download task exist, not loop check downlaod status")
+            log.w("no download task exist, not loop check downlaod status")
         } else {
             backHandler.postDelayed(mCheckDownloadStatusRunn, 1000)
         }
@@ -130,7 +130,7 @@ class Downloader private constructor(private val mContext: Context) {
                         DownloadManager.STATUS_PAUSED -> {
                             reason =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
-                            LOG.w(
+                            log.w(
                                 "download paused:${
                                     Task.toString(
                                         mContext,
@@ -138,12 +138,12 @@ class Downloader private constructor(private val mContext: Context) {
                                     )
                                 }, reason:${reason}"
                             )
-                            LOG.w("download delayed:${Task.toString(mContext, task)}")
+                            log.w("download delayed:${Task.toString(mContext, task)}")
                             val soFar =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                             val total =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                            LOG.v(
+                            log.v(
                                 "downloading:${
                                     Task.toString(
                                         mContext,
@@ -154,12 +154,12 @@ class Downloader private constructor(private val mContext: Context) {
                             notifyListener(Progress(task, soFar, total))
                         }
                         DownloadManager.STATUS_PENDING -> {
-                            LOG.w("download delayed:${Task.toString(mContext, task)}")
+                            log.w("download delayed:${Task.toString(mContext, task)}")
                             val soFar =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                             val total =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                            LOG.v(
+                            log.v(
                                 "downloading:${
                                     Task.toString(
                                         mContext,
@@ -174,7 +174,7 @@ class Downloader private constructor(private val mContext: Context) {
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                             val total =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                            LOG.v(
+                            log.v(
                                 "downloading:${
                                     Task.toString(
                                         mContext,
@@ -191,14 +191,14 @@ class Downloader private constructor(private val mContext: Context) {
                                 )
                             )
                             task.fileRealDestinationUri = destinationUri
-                            LOG.i("download success:${Task.toString(mContext, task)}")
+                            log.i("download success:${Task.toString(mContext, task)}")
                             tasksSuccess.add(task)
                             notifyListener(Status.Success(task))
                         }
                         DownloadManager.STATUS_FAILED -> {
                             reason =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
-                            LOG.e(
+                            log.e(
                                 "download failed:${
                                     Task.toString(
                                         mContext,

@@ -353,6 +353,6 @@ class Log {
 
     companion object {
         private const val sCommonFilterTag = "[log]"
-        val LOG = Log()
+        val log = Log()
     }
 }

@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 
 /**
  * @作者 qinbaowei
@@ -18,21 +18,21 @@ object RecyclerViewScrollUtil {
     @JvmStatic
     fun isContentToTop(view: View?): Boolean {
         if (null == view) {
-            LOG.e("null == view")
+            log.e("null == view")
             return true
         }
         if (view is RecyclerView) {
             val recyclerView = view
             val layoutManager = recyclerView.layoutManager
             val itemCount = layoutManager!!.itemCount
-            LOG.v("itemCount = $itemCount")
+            log.v("itemCount = $itemCount")
             if (0 == itemCount) {
                 return true
             }
             val poss = getRecyclerViewFirstCompleteVisiblePos(recyclerView)
             var iTop = false
             for (p in poss!!) {
-                LOG.v("first complete visible position = $p")
+                log.v("first complete visible position = $p")
                 if (0 == p) {
                     iTop = true
                     break
@@ -41,11 +41,11 @@ object RecyclerViewScrollUtil {
                         0
                     )
                     if (null == viewHolder) {
-                        LOG.v("null == viewHolder")
+                        log.v("null == viewHolder")
                         iTop = false
                     } else {
                         val top = viewHolder.itemView.top
-                        LOG.v("first item view top = $top")
+                        log.v("first item view top = $top")
                         iTop = 0 == top
                         if (iTop) {
                             break

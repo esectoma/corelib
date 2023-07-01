@@ -3,11 +3,10 @@ package com.app.expandableadapterx
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.lifecycle.MutableLiveData
 import com.app.expandableadapterx.databinding.ActivityMainBinding
 import com.google.gson.reflect.TypeToken
 import com.nanako.log.Log
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 import com.nanako.util.Util
 
 class MainActivity : AppCompatActivity() {
@@ -22,12 +21,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
 
-        Log.LOG.isEnabled = true
-        Log.LOG.i("aabc")
+        Log.log.isEnabled = true
+        Log.log.i("aabc")
 
-        LOG.i(Util.replaceChar("1234567", 2, 2, 10, "*"))
-        LOG.i(Util.replaceChar("1234567", 0, 2, 10, "*"))
-        LOG.i(Util.replaceChar(null, 0, 2, 10, "*"))
+        log.i(Util.replaceChar("1234567", 2, 2, 10, "*"))
+        log.i(Util.replaceChar("1234567", 0, 2, 10, "*"))
+        log.i(Util.replaceChar(null, 0, 2, 10, "*"))
 
         val type = object :TypeToken<TestModel>(){}.type
         testHttp()

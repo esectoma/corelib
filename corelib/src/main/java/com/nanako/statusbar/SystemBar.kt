@@ -5,7 +5,7 @@ import android.os.Build
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 
 object SystemBar {
 
@@ -74,26 +74,26 @@ object SystemBar {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 visibility = visibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 visibility = visibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
             }
         }
         if (lightNavBar) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 visibility = visibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 visibility = visibility and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
             }
         }
         window.decorView.systemUiVisibility = visibility
@@ -106,13 +106,13 @@ object SystemBar {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 visibility = visibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 visibility = visibility and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_STATUS_BAR SDK must bigger than 23!!!")
             }
         }
         window.decorView.systemUiVisibility = visibility
@@ -125,13 +125,13 @@ object SystemBar {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 visibility = visibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 visibility = visibility and View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
             } else {
-                LOG.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
+                log.w("Use SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR SDK must bigger than 26!!!")
             }
         }
         window.decorView.systemUiVisibility = visibility

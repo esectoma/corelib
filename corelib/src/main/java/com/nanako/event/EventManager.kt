@@ -6,7 +6,7 @@ package com.nanako.event
 class EventManager private constructor() {
 
     companion object {
-        val EVENTMANAGER = EventManager()
+        val em = EventManager()
     }
 
     private val listeners = mutableListOf<Listener>()

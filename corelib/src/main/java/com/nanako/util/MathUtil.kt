@@ -1,7 +1,7 @@
 package com.nanako.util
 
 import android.text.TextUtils
-import com.nanako.log.Log.Companion.LOG
+import com.nanako.log.Log.Companion.log
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -16,7 +16,7 @@ object MathUtil {
             return bd1.add(bd2).toDouble()
         } catch (e: Exception) {
             e.printStackTrace()
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -28,7 +28,7 @@ object MathUtil {
             return bd1.subtract(bd2).toDouble()
         } catch (e: Exception) {
             e.printStackTrace()
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -40,7 +40,7 @@ object MathUtil {
             return bd1.divide(bd2, scale, BigDecimal.ROUND_FLOOR).toDouble()
         } catch (e: Exception) {
             e.printStackTrace()
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -52,7 +52,7 @@ object MathUtil {
             return bd1.divide(bd2, scale, BigDecimal.ROUND_HALF_UP).toDouble()
         } catch (e: Exception) {
             e.printStackTrace()
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -64,7 +64,7 @@ object MathUtil {
             return bd1.multiply(bd2).toDouble()
         } catch (e: Exception) {
             e.printStackTrace()
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -92,7 +92,7 @@ object MathUtil {
             }
             return bd!!.toDouble()
         } catch (e: Exception) {
-            LOG.e(e)
+            log.e(e)
         }
         return 0.toDouble()
     }
@@ -147,7 +147,7 @@ object MathUtil {
             formater.roundingMode = roundingMode
             return formater.format(v)
         } catch (e: Exception) {
-            LOG.e(e)
+            log.e(e)
         }
         return ""
     }
@@ -200,7 +200,7 @@ object MathUtil {
         try {
             return BigDecimal(doubleValue).stripTrailingZeros().toPlainString()
         } catch (e: Exception) {
-            LOG.e(e)
+            log.e(e)
         }
         return doubleValue
     }
