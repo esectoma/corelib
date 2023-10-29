@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import com.core.download.Downloader.Status.Existed
@@ -19,7 +20,7 @@ import com.core.log.Log.Companion.log
 
 class Downloader private constructor(private val mContext: Context) {
     private val listeners: MutableList<Listener> = ArrayList()
-    private val uiHandler = Handler()
+    private val uiHandler = Handler(Looper.getMainLooper())
     private val backHandler: Handler
     private lateinit var downloadManager: DownloadManager
     private val tasks: MutableList<Task> = ArrayList()
@@ -303,7 +304,7 @@ class Downloader private constructor(private val mContext: Context) {
                 return Task(
                     downloadUrl,
                     Environment.DIRECTORY_DOWNLOADS, subDir,
-                    fileName, false, true
+                    fileName, isShowNotification = false, isReDownloadWhenExist = true
                 )
             }
 
