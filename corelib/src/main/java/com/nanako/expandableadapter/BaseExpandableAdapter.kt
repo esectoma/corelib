@@ -18,7 +18,7 @@ abstract class BaseExpandableAdapter : RecyclerView.Adapter<RecyclerView.ViewHol
         return position.toLong()
     }
 
-    abstract fun getItem(adapPos: Int): Any
+    abstract fun getItem(position: Int): Any
 
     /**
      * @param groupPosition group position in group data list

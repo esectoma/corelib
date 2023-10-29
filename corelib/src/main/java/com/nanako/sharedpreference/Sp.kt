@@ -7,10 +7,10 @@ import com.google.gson.Gson
 import java.lang.Exception
 import java.lang.reflect.Type
 
-object Preference {
+object Sp {
     private lateinit var sSharedPreferences: SharedPreferences
     private lateinit var sGson: Gson
-    private val sXLog = Log()
+    private val log = Log()
 
     /**
      * call this method in Application's onCreate method
@@ -18,12 +18,12 @@ object Preference {
     fun init(context: Context, debug: Boolean) {
         sSharedPreferences = context.getSharedPreferences("P_nanako", Context.MODE_PRIVATE)
         sGson = Gson()
-        sXLog.setFilterTag("[P]")
-        sXLog.isEnabled = debug
+        log.filterTag="[Sp]"
+        log.isEnabled = debug
     }
 
     fun putInt(key: String, value: Int) {
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         sSharedPreferences.edit().putInt(key, value).commit()
     }
 
@@ -33,13 +33,13 @@ object Preference {
 
     fun getInt(key: String, defaultValue: Int): Int {
         val value = sSharedPreferences.getInt(key, defaultValue)
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         return value
     }
 
     fun putLong(key: String, value: Long) {
         sSharedPreferences.edit().putLong(key, value).commit()
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
     }
 
     fun getLong(key: String): Long {
@@ -48,13 +48,13 @@ object Preference {
 
     fun getLong(key: String, defaultValue: Long): Long {
         val value = sSharedPreferences.getLong(key, defaultValue)
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         return value
     }
 
     fun putString(key: String, value: String) {
         sSharedPreferences.edit().putString(key, value).commit()
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
     }
 
     fun getString(key: String): String {
@@ -63,13 +63,13 @@ object Preference {
 
     fun getString(key: String, defaultValue: String): String {
         val value = sSharedPreferences.getString(key, defaultValue)
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         return value!!
     }
 
     fun putFloat(key: String, value: Float) {
         sSharedPreferences.edit().putFloat(key, value).commit()
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
     }
 
     fun getFloat(key: String): Float {
@@ -78,13 +78,13 @@ object Preference {
 
     fun getFloat(key: String, defaultValue: Float): Float {
         val value = sSharedPreferences.getFloat(key, defaultValue)
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         return value
     }
 
     fun putBoolean(key: String, value: Boolean) {
         sSharedPreferences.edit().putBoolean(key, value).commit()
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
     }
 
     fun getBoolean(key: String): Boolean {
@@ -93,14 +93,14 @@ object Preference {
 
     fun getBoolean(key: String, defaultValue: Boolean): Boolean {
         val value = sSharedPreferences.getBoolean(key, defaultValue)
-        sXLog.d("key[$key], value[$value]")
+        log.d("key[$key], value[$value]")
         return value
     }
 
     fun <T> getObject(key: String, type: Type): T? {
         try {
             val json = getString(key)
-            sXLog.d("key[$key], value[$json], class[${type.toString()}]")
+            log.d("key[$key], value[$json], class[${type.toString()}]")
             return sGson.fromJson(json, type)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -117,7 +117,7 @@ object Preference {
                 className = value.javaClass.name
             }
             sSharedPreferences.edit().putString(key, json).commit()
-            sXLog.d("key[$key], value[$json], class[$className]")
+            log.d("key[$key], value[$json], class[$className]")
         } catch (e: Exception) {
             e.printStackTrace()
         }

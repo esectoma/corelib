@@ -10,59 +10,49 @@ import java.lang.StringBuilder
 import java.util.*
 
 class Log {
-    private var mEnabled = false
-    private var mLogDirPath: String? = null
-    private var mFilterTag = ""
+
     private val JSON_INDENT = 4
     private val LINE_SEPARATOR = System.getProperty("line.separator")
-    var isEnabled: Boolean
-        get() = mEnabled
-        set(enabled) {
-            setEnabled(enabled, "")
-        }
 
-    fun setEnabled(enabled: Boolean, logDirPath: String?) {
-        mEnabled = enabled
-        mLogDirPath = logDirPath
-    }
+    var isEnabled: Boolean = false
+    var logPath: String? = null
+    var filterTag: String = ""
 
-    fun setFilterTag(filterTag: String) {
-        mFilterTag = filterTag
-    }
 
     fun v(log: String) {
-        l('v', log)
+        if (isEnabled) l('v', log)
     }
 
     fun d(log: String) {
-        l('d', log)
+        if (isEnabled) l('d', log)
     }
 
     fun i(log: String) {
-        l('i', log)
+        if (isEnabled) l('i', log)
     }
 
     fun w(log: String) {
-        l('w', log)
+        if (isEnabled) l('w', log)
     }
 
     fun w(e: Throwable?) {
-        if (null != e) {
-            val message = e.message
-            if (!TextUtils.isEmpty(message)) {
-                l('w', message!!)
-            } else {
-                l('w', "message is empty")
+        if (isEnabled)
+            if (null != e) {
+                val message = e.message
+                if (!TextUtils.isEmpty(message)) {
+                    l('w', message!!)
+                } else {
+                    l('w', "message is empty")
+                }
             }
-        }
     }
 
     fun e(log: String) {
-        l('e', log)
+        if (isEnabled) l('e', log)
     }
 
     fun e(e: Throwable?) {
-        if (null != e) {
+        if (isEnabled) if (null != e) {
             val message = e.message
             if (!TextUtils.isEmpty(message)) {
                 l('e', message!!)
@@ -73,51 +63,48 @@ class Log {
     }
 
     fun jsonV(message: String) {
-        if (mEnabled) log('v', createLog(jsonLog(message), 5))
+        if (isEnabled) log('v', createLog(jsonLog(message), 5))
     }
 
     fun jsonD(message: String) {
-        if (mEnabled) log('d', createLog(jsonLog(message), 5))
+        if (isEnabled) log('d', createLog(jsonLog(message), 5))
     }
 
     fun jsonI(message: String) {
-        if (mEnabled) log('i', createLog(jsonLog(message), 5))
+        if (isEnabled) log('i', createLog(jsonLog(message), 5))
     }
 
     fun jsonW(message: String) {
-        if (mEnabled) log('w', createLog(jsonLog(message), 5))
+        if (isEnabled) log('w', createLog(jsonLog(message), 5))
     }
 
     fun jsonE(message: String) {
-        if (mEnabled) log('e', createLog(jsonLog(message), 5))
+        if (isEnabled) log('e', createLog(jsonLog(message), 5))
     }
 
     fun urlV(url: String, mapParam: Map<String, Any>) {
-        if (mEnabled) l('v', urlLog(url, mapParam))
+        if (isEnabled) l('v', urlLog(url, mapParam))
     }
 
     fun urlD(url: String, mapParam: Map<String, Any>) {
-        if (mEnabled) l('d', urlLog(url, mapParam))
+        if (isEnabled) l('d', urlLog(url, mapParam))
     }
 
     fun urlI(url: String, mapParam: Map<String, Any>) {
-        if (mEnabled) l('i', urlLog(url, mapParam))
+        if (isEnabled) l('i', urlLog(url, mapParam))
     }
 
     fun urlW(url: String, mapParam: Map<String, Any>) {
-        if (mEnabled) l('w', urlLog(url, mapParam))
+        if (isEnabled) l('w', urlLog(url, mapParam))
     }
 
     fun urlE(url: String, mapParam: Map<String, Any>) {
-        if (mEnabled) l('e', urlLog(url, mapParam))
+        if (isEnabled) l('e', urlLog(url, mapParam))
     }
 
     private fun l(type: Char, log: String) {
-        if (!mEnabled) {
-            return
-        }
         try {
-            val isWriteToFile = !TextUtils.isEmpty(mLogDirPath)
+            val isWriteToFile = logPath?.isNotEmpty() == true
             val logs = createLog(log)
             log(type, logs)
             if (isWriteToFile) {
@@ -129,26 +116,6 @@ class Log {
                 android.util.Log.w("[L]156", msg!!)
             }
         }
-    }
-
-    fun logV(log: String) {
-        if (mEnabled) log('v', createLog(log, 5))
-    }
-
-    fun logD(log: String) {
-        if (mEnabled) log('d', createLog(log, 5))
-    }
-
-    fun logI(log: String) {
-        if (mEnabled) log('i', createLog(log, 5))
-    }
-
-    fun logW(log: String) {
-        if (mEnabled) log('w', createLog(log, 5))
-    }
-
-    fun logE(log: String) {
-        if (mEnabled) log('e', createLog(log, 5))
     }
 
     private fun log(level: Char, logs: Array<String>) {
@@ -217,6 +184,7 @@ class Log {
                         jsonLog.append(message.substring(joe + 1, message.length))
                             .append(LINE_SEPARATOR)
                     }
+
                     1 -> {
                         jsonLog.append(message.substring(0, jab)).append(LINE_SEPARATOR)
                         jsonLog.append(
@@ -227,6 +195,7 @@ class Log {
                         jsonLog.append(message.substring(jae + 1, message.length))
                             .append(LINE_SEPARATOR)
                     }
+
                     else -> {}
                 }
                 jsonLog.toString()
@@ -241,20 +210,17 @@ class Log {
     }
 
     fun urlLog(url: String, mapParam: Map<String, Any>): String {
-        var url = url
-        if (!mEnabled) {
-            return ""
-        }
+        var urlQeury = url
         val stringBuilder = StringBuilder()
-        stringBuilder.append("$url?")
+        stringBuilder.append("$urlQeury?")
         if (!mapParam.isEmpty()) {
             val entrySet = mapParam.entries
             for ((key, value) in entrySet) {
-                stringBuilder.append(key.toString() + "=" + value + "&")
+                stringBuilder.append("$key=$value&")
             }
         }
-        url = stringBuilder.toString()
-        return url.substring(0, url.length - 1)
+        urlQeury = stringBuilder.toString()
+        return urlQeury.substring(0, urlQeury.length - 1)
     }
 
     fun line(top: Boolean) {
@@ -271,21 +237,10 @@ class Log {
         }
     }
 
-    private fun createLog(log: String, depth: Int = 7): Array<String> {
-        var log: String = log
-        var tag = if (mEnabled) getFileNameMethodLineNumber(depth) else ""
-        return arrayOf(sCommonFilterTag + mFilterTag, tag + log)
-    }
+    private fun createLog(log: String, depth: Int = 7): Array<String> =
+        arrayOf(sCommonFilterTag + filterTag, getFileNameMethodLineNumber(depth) + log)
 
-    /**
-     * @param tag
-     * @param msg
-     */
     private fun writeToFile(tag: String, msg: String) {
-        if (Environment.MEDIA_MOUNTED != Environment.getExternalStorageState()) {
-            android.util.Log.e("", "no external storage!!!")
-            return
-        }
         val date = Calendar.getInstance().time
         val logName = String.format(
             "%1$04d%2$02d%3$02d.txt",
@@ -293,15 +248,15 @@ class Log {
             date.month + 1,
             date.date
         )
-        val fLogDir = File(mLogDirPath)
+        val fLogDir = File(logPath)
         if (!fLogDir.exists()) {
             if (!fLogDir.mkdirs()) {
-                android.util.Log.e("", "create dir[$mLogDirPath]failed!!!")
+                android.util.Log.e("", "create dir[$logPath]failed!!!")
                 return
             }
         }
         try {
-            val f = File(mLogDirPath + File.separator + logName)
+            val f = File(logPath + File.separator + logName)
             if (!f.exists()) {
                 if (!f.createNewFile()) {
                     android.util.Log.e("", "create file failed")

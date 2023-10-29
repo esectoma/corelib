@@ -2,6 +2,8 @@ package com.nanako.http
 
 import android.app.Application
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
 import com.nanako.log.Log
@@ -33,25 +35,129 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-/**
- * Created by Bond on 2016/4/13.
- */
-class HttpTask private constructor() {
-    var url: String? = null
-    var method: String = ""
-    var params: Map<String, Any>? = null
-    var responseClass: Class<*>? = null
-    var backParam: Any? = null
-    var beforeCallBack: FlowCallBack? = null
-    var files: Map<String, String>? = null
-    var headers: Map<String, String>? = null
-    var afterCallBack: FlowCallBack? = null
-    var callBack: CallBack? = null
-    var extraParams: MutableMap<String, Any>? = null
-    var backgroundBeforeCallBack: FlowCallBack? = null
-    var defaultFileExtension = "jpg"
-    var globalDeal = true
-    var noCommonParam = false
+class HttpTask(
+    var url: String? = null,
+    var method: String = "",
+    var params: Map<String, Any>? = null,
+    var responseClass: Class<*>? = null,
+    var backParam: Any? = null,
+    var backgroundBeforeCallBack: CallBack? = null,
+    var beforeCallBack: CallBack? = null,
+    var callBack: CallBack? = null,
+    var afterCallBack: CallBack? = null,
+    var defaultFileExtension: String = "jpg",
+    var globalDeal: Boolean = true,
+    var noCommonParam: Boolean = false,
+) {
+
+    private var mainHandler: Handler = Handler(Looper.getMainLooper())
+
+    init {
+        if (url == null) {
+            url = if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else defaultUrl
+        }
+    }
+
+    companion object {
+        val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
+        const val FAILUE = -1
+        const val NETWORK_INVALID = -2
+        var SYSTEM_ERROR = "system error"
+        var NETWORK_ERROR = "network error"
+        const val NETWORK_ERROR_CASE = "Failed to connect to"
+        const val NETWORK_ERROR_CASE_1 = "Connection reset"
+        val NETWORK_ERROR_CASE_LIST: MutableList<String> = ArrayList()
+        private var debug = false
+        private lateinit var context: Application
+        private lateinit var okHttpClient: OkHttpClient
+        private var gson: Gson? = null
+        private var iCommonHeadersAndParameters: ICommonHeadersAndParameters? = null
+        private var iCommonErrorDeal: ICommonErrorDeal? = null
+        private lateinit var iCheckHttpResponse: ICheckHttpResponse
+        var realExceptionCallback: RealExceptionCallback? = null
+        var dynamicUrlCallback: DynamicUrlCallback? = null
+        var clientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
+        var defaultUrl: String? = null
+        private var timeDiff: Long = 0
+        var log = Log()
+        private var responseClass: Class<*>? = null
+        private var type = Type.RAW_METHOD_APPEND_URL
+        var dynamicUrl = false
+
+        @JvmOverloads
+        fun init(
+            isDebug: Boolean,
+            context: Application,
+            url: String,
+            iCommonHeadersAndParameters: ICommonHeadersAndParameters?,
+            iCommonErrorDeal: ICommonErrorDeal?,
+            iCheckHttpResponse: ICheckHttpResponse,
+            certificateAssetsName: String?,
+            type: Type = Type.RAW_METHOD_APPEND_URL,
+            param: Param = Param()
+        ) {
+            debug = isDebug
+            log.filterTag = "[HttpTask]"
+            log.isEnabled = isDebug
+            Companion.context = context
+            this.defaultUrl = url
+            this.iCommonHeadersAndParameters = iCommonHeadersAndParameters
+            this.iCommonErrorDeal = iCommonErrorDeal
+            this.iCheckHttpResponse = iCheckHttpResponse
+            val builder = OkHttpClient.Builder()
+            val loggingInterceptor = HttpLoggingInterceptor { message -> log.jsonV(message) }
+            loggingInterceptor.setLevel(if (isDebug) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE)
+            builder.addInterceptor(loggingInterceptor)
+            builder.connectTimeout(param.mConnectTimeout.toLong(), TimeUnit.SECONDS)
+            builder.readTimeout(param.mReadTimeout.toLong(), TimeUnit.SECONDS)
+            builder.writeTimeout(param.mWriteTimeout.toLong(), TimeUnit.SECONDS)
+            try {
+                if (url.startsWith("https")) {
+                    if (!TextUtils.isEmpty(certificateAssetsName)) {
+                        val inputStream = context.assets.open(certificateAssetsName!!)
+                        setTrust(builder, inputStream)
+                    } else {
+                        log.w("notice that you choose trust all certificates")
+                        trustAllCerts(builder)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                log.e(e)
+            }
+            okHttpClient = builder.build()
+            gson = Gson()
+            this.iCommonHeadersAndParameters?.init(Companion.context)
+            this.type = type
+            NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
+            NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
+        }
+
+        private fun calculateTimeDiff(response: Response) {
+            val dateStr = response.header("Date")
+            dateStr?.let {
+                try {
+                    SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(dateStr)
+                        ?.let { date ->
+                            timeDiff = System.currentTimeMillis() - date.time
+                            clientServerTimeDiffCallback?.onClientServerTimeDiff(timeDiff)
+                            log.v("local and server time differ [${timeDiff}]")
+                        }
+                } catch (e: Exception) {
+                    timeDiff = 0
+                    e.printStackTrace()
+                    log.e(e)
+                }
+            }
+        }
+
+        val serverCurrentTimeMillis: Long
+            get() = System.currentTimeMillis() - timeDiff
+    }
+
+
+    private var files: Map<String, String>? = null
+    private var headers: Map<String, String>? = null
     private var wrCallBack: WeakReference<CallBack>? = null
     private var weakReferenceCallback = false
     private var bodyType = BodyType.POST
@@ -110,11 +216,10 @@ class HttpTask private constructor() {
             val reqBuilder = Request.Builder()
             if (iCommonHeadersAndParameters != null) {
                 val headers = iCommonHeadersAndParameters!!.getHeaders(
-                    method,
-                    params
+                    method, params
                 )
                 this.headers = headers
-                if (headers != null && headers.isNotEmpty()) {
+                if (!headers.isNullOrEmpty()) {
                     for ((key, value) in headers) {
                         reqBuilder.addHeader(key, value)
                     }
@@ -153,9 +258,7 @@ class HttpTask private constructor() {
                     }
                     log.d("add upload file[$key], key,fileName[$fileName],fileExtension[$fileExtension],mineType[$mineType]")
                     bodyBuilder.addFormDataPart(
-                        key,
-                        fileName,
-                        RequestBody.create(
+                        key, fileName, RequestBody.create(
                             mineType?.toMediaTypeOrNull(), file
                         )
                     )
@@ -186,15 +289,10 @@ class HttpTask private constructor() {
                     var urlBuilder = StringBuilder(url!!)
                     urlBuilder.append("?")
                     for ((key, value) in entrySet) {
-                        urlBuilder.append(key)
-                            .append("=")
-                            .append(value)
-                            .append("&")
+                        urlBuilder.append(key).append("=").append(value).append("&")
                     }
                     urlBuilder = urlBuilder.replace(
-                        urlBuilder.length - 1,
-                        urlBuilder.length,
-                        ""
+                        urlBuilder.length - 1, urlBuilder.length, ""
                     )
                     reqBuilder.url(urlBuilder.toString())
                     if (bodyType == BodyType.GET) {
@@ -242,7 +340,6 @@ class HttpTask private constructor() {
             return this
         }
         startTimestamp = System.currentTimeMillis()
-        onHttpStart()
         okHttpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
@@ -268,35 +365,30 @@ class HttpTask private constructor() {
                         log.v("sResponse[${HttpTask.responseClass?.name}]")
                     }
                     if (response.isSuccessful) {
-                        val result = response.body!!.string()
+                        val responseBodyString = response.body!!.string()
                         if (iDataConverter == null) {
-                            val httpResponse = gson!!.fromJson<Any>(
-                                result,
-                                HttpTask.responseClass
-                            )
-                            if (httpResponse !is IHttpResponse) {
-                                log.e("result[$result]")
-                                throw RuntimeException(
-                                    "sResponseClass must implements IHttpResponse"
+                            if (iCheckHttpResponse.isSuccess(responseBodyString)) {
+                                onHttpSuccess(
+                                    gson!!.fromJson<Any>(responseBodyString, responseClass)
                                 )
-                            }
-                            if (httpResponse.onGetCode() == 0) {
-                                onHttpSuccess(result, gson!!.fromJson<Any>(result, responseClass))
                             } else {
                                 onHttpFailed(
-                                    httpResponse.onGetCode(),
-                                    httpResponse.onGetMessage() ?: ""
+                                    iCheckHttpResponse.getCode(responseBodyString),
+                                    iCheckHttpResponse.getMessage(responseBodyString)
                                 )
                             }
                         } else {
-                            onHttpSuccess(result, iDataConverter.doConvert(result, responseClass))
+                            onHttpSuccess(
+                                iDataConverter.doConvert(responseBodyString, responseClass)
+                            )
                         }
                     } else {
                         log.e("http error status code[${response.code}]")
                         onHttpFailed(FAILUE, SYSTEM_ERROR)
                         if (realExceptionCallback != null) {
                             realExceptionCallback!!.onHttpTaskRealException(
-                                this@HttpTask, FAILUE,
+                                this@HttpTask,
+                                FAILUE,
                                 response.code.toString() + "," + response.message
                             )
                         }
@@ -307,9 +399,7 @@ class HttpTask private constructor() {
                     onHttpFailed(FAILUE, SYSTEM_ERROR)
                     if (realExceptionCallback != null) {
                         realExceptionCallback!!.onHttpTaskRealException(
-                            this@HttpTask,
-                            FAILUE,
-                            e.message
+                            this@HttpTask, FAILUE, e.message
                         )
                     }
                 } finally {
@@ -355,50 +445,36 @@ class HttpTask private constructor() {
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun onHttpStart() {
+    private fun onHttpSuccess(model: Any) {
         printUrlParams()
-        GlobalScope.launch(Dispatchers.Main) {
+        backgroundBeforeCallBack?.onHttpSuccess(this, model)
+        mainHandler.post {
+            beforeCallBack?.onHttpSuccess(this, model)
             if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpStart(this@HttpTask)
+                wrCallBack?.get()?.onHttpSuccess(this, model)
             } else {
-                callBack?.onHttpStart(this@HttpTask)
+                callBack?.onHttpSuccess(this, model)
             }
+            afterCallBack?.onHttpSuccess(this, model)
         }
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun onHttpSuccess(modelStr: String, model: Any) {
-        printUrlParams()
-        backgroundBeforeCallBack?.onSuccess(this, model, modelStr)
-        GlobalScope.launch(Dispatchers.Main) {
-            beforeCallBack?.onSuccess(this@HttpTask, model, modelStr)
-            if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpSuccess(this@HttpTask, model)
-            } else {
-                callBack?.onHttpSuccess(this@HttpTask, model)
-            }
-            afterCallBack?.onSuccess(this@HttpTask, model, modelStr)
-        }
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
     private fun onHttpFailed(code: Int, msg: String) {
         printUrlParams()
         if (backgroundBeforeCallBack != null) {
-            backgroundBeforeCallBack!!.onFailed(this, code, msg)
+            backgroundBeforeCallBack!!.onHttpFailed(this, code, msg)
         }
-        GlobalScope.launch(Dispatchers.Main) {
+        mainHandler.post {
             if (globalDeal) {
-                iCommonErrorDeal?.onFailed(this@HttpTask, code, msg)
+                iCommonErrorDeal?.onFailed(this, code, msg)
             }
-            beforeCallBack?.onFailed(this@HttpTask, code, msg)
+            beforeCallBack?.onHttpFailed(this, code, msg)
             if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpFailed(this@HttpTask, code, msg)
+                wrCallBack?.get()?.onHttpFailed(this, code, msg)
             } else {
-                callBack?.onHttpFailed(this@HttpTask, code, msg)
+                callBack?.onHttpFailed(this, code, msg)
             }
-            afterCallBack?.onFailed(this@HttpTask, code, msg)
+            afterCallBack?.onHttpFailed(this, code, msg)
         }
     }
 
@@ -407,14 +483,8 @@ class HttpTask private constructor() {
     }
 
     interface CallBack {
-        fun onHttpStart(ht: HttpTask)
         fun onHttpSuccess(ht: HttpTask, model: Any)
         fun onHttpFailed(ht: HttpTask, code: Int, msg: String)
-    }
-
-    interface FlowCallBack {
-        fun onSuccess(ht: HttpTask, entity: Any, modelStr: String)
-        fun onFailed(ht: HttpTask, code: Int, msg: String)
     }
 
     interface IDataConverter {
@@ -427,9 +497,16 @@ class HttpTask private constructor() {
         fun getParams(method: String, params: Map<String, Any>?): Map<String, Any>?
     }
 
-    interface IHttpResponse {
+    /*interface IHttpResponse {
         fun onGetCode(): Int
         fun onGetMessage(): String?
+    }*/
+
+    interface ICheckHttpResponse {
+        fun isSuccess(responseBodyString: String): Boolean
+
+        fun getCode(responseBodyString: String): Int
+        fun getMessage(responseBodyString: String): String
     }
 
     private fun getFileExtensionFromPath(path: String): String {
@@ -450,15 +527,10 @@ class HttpTask private constructor() {
     }
 
     open class SimpleCallBack : CallBack {
-        override fun onHttpStart(ht: HttpTask) {}
         override fun onHttpSuccess(ht: HttpTask, model: Any) {}
         override fun onHttpFailed(ht: HttpTask, code: Int, msg: String) {}
     }
 
-    open class SimpleFlowCallBack : FlowCallBack {
-        override fun onSuccess(ht: HttpTask, entity: Any, modelStr: String) {}
-        override fun onFailed(ht: HttpTask, code: Int, msg: String) {}
-    }
 
     interface RealExceptionCallback {
         fun onHttpTaskRealException(httpTask: HttpTask, code: Int, exception: String?)
@@ -476,143 +548,5 @@ class HttpTask private constructor() {
         var mConnectTimeout = 30
         var mReadTimeout = 30
         var mWriteTimeout = 30
-    }
-
-    companion object {
-        val JSON: MediaType = "application/json; charset=utf-8".toMediaType()
-        const val FAILUE = -1
-        const val NETWORK_INVALID = -2
-        var SYSTEM_ERROR = "system error"
-        var NETWORK_ERROR = "network error"
-        const val NETWORK_ERROR_CASE = "Failed to connect to"
-        const val NETWORK_ERROR_CASE_1 = "Connection reset"
-        val NETWORK_ERROR_CASE_LIST: MutableList<String> = ArrayList()
-        private var debug = false
-        lateinit var context: Application
-            private set
-        private lateinit var okHttpClient: OkHttpClient
-        private var gson: Gson? = null
-        private var iCommonHeadersAndParameters: ICommonHeadersAndParameters? = null
-        private var iCommonErrorDeal: ICommonErrorDeal? = null
-        var realExceptionCallback: RealExceptionCallback? = null
-        var dynamicUrlCallback: DynamicUrlCallback? = null
-        var clientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
-        var url: String? = null
-        private var timeDiff: Long = 0
-        var log = Log()
-        private var responseClass: Class<*>? = null
-        private var type = Type.RAW_METHOD_APPEND_URL
-        var dynamicUrl = false
-
-        @JvmOverloads
-        fun init(
-            isDebug: Boolean,
-            context: Application,
-            url: String,
-            iCommonHeadersAndParameters: ICommonHeadersAndParameters?,
-            iCommonErrorDeal: ICommonErrorDeal?,
-            responseClass: Class<*>?,
-            certificateAssetsName: String?,
-            type: Type =
-                Type.RAW_METHOD_APPEND_URL, param: Param = Param()
-        ) {
-            debug = isDebug
-            log.setFilterTag("[http]")
-            log.isEnabled = isDebug
-            Companion.context = context
-            this.url = url
-            this.iCommonHeadersAndParameters = iCommonHeadersAndParameters
-            this.iCommonErrorDeal = iCommonErrorDeal
-            this.responseClass = responseClass
-            val builder = OkHttpClient.Builder()
-            val loggingInterceptor = HttpLoggingInterceptor { message -> log.jsonV(message) }
-            loggingInterceptor.setLevel(if (isDebug) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE)
-            builder.addInterceptor(loggingInterceptor)
-            builder.connectTimeout(param.mConnectTimeout.toLong(), TimeUnit.SECONDS)
-            builder.readTimeout(param.mReadTimeout.toLong(), TimeUnit.SECONDS)
-            builder.writeTimeout(param.mWriteTimeout.toLong(), TimeUnit.SECONDS)
-            try {
-                if (url.startsWith("https")) {
-                    if (!TextUtils.isEmpty(certificateAssetsName)) {
-                        val inputStream = context.assets.open(certificateAssetsName!!)
-                        setTrust(builder, inputStream)
-                    } else {
-                        log.w("notice that you choose trust all certificates")
-                        trustAllCerts(builder)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                log.e(e)
-            }
-            okHttpClient = builder.build()
-            gson = Gson()
-            this.iCommonHeadersAndParameters?.init(Companion.context)
-            this.type = type
-            NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
-            NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
-        }
-
-        fun create(
-            method: String,
-            params: Map<String, Any>?,
-            responseClass: Class<*>?,
-            callBack: CallBack
-        ): HttpTask {
-            return create(method, params, responseClass, null, null, callBack, null)
-        }
-
-        fun create(
-            method: String,
-            params: Map<String, Any>?,
-            responseClass: Class<*>?,
-            backParam: Any?,
-            callBack: CallBack
-        ): HttpTask {
-            return create(method, params, responseClass, backParam, null, callBack, null)
-        }
-
-        fun create(
-            method: String,
-            params: Map<String, Any>?,
-            responseClass: Class<*>?,
-            backParam: Any?,
-            beforeCallBack: FlowCallBack?,
-            callBack: CallBack,
-            afterCallBack: FlowCallBack?
-        ): HttpTask {
-            return HttpTask().apply {
-                this.url =
-                    if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else this@Companion.url
-                this.method = method
-                this.params = params
-                this.responseClass = responseClass
-                this.backParam = backParam
-                this.beforeCallBack = beforeCallBack
-                this.callBack = callBack
-                this.afterCallBack = afterCallBack
-            }
-        }
-
-        private fun calculateTimeDiff(response: Response) {
-            val dateStr = response.header("Date")
-            dateStr?.let {
-                try {
-                    SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(dateStr)
-                        ?.let { date ->
-                            timeDiff = System.currentTimeMillis() - date.time
-                            clientServerTimeDiffCallback?.onClientServerTimeDiff(timeDiff)
-                            log.v("local and server time differ [${timeDiff}]")
-                        }
-                } catch (e: Exception) {
-                    timeDiff = 0
-                    e.printStackTrace()
-                    log.e(e)
-                }
-            }
-        }
-
-        val serverCurrentTimeMillis: Long
-            get() = System.currentTimeMillis() - timeDiff
     }
 }

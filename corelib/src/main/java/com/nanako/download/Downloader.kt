@@ -1,5 +1,7 @@
 package com.nanako.download
 
+import android.annotation.SuppressLint
+import android.app.Application
 import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
@@ -8,6 +10,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.text.TextUtils
 import android.webkit.MimeTypeMap
+import androidx.annotation.DoNotInline
 import com.nanako.download.Downloader.Status.Existed
 import com.nanako.download.Downloader.Status.Progress
 import com.nanako.download.Downloader.Status.Failed
@@ -71,8 +74,7 @@ class Downloader private constructor(private val mContext: Context) {
         //在通知栏中显示，默认就是显示的
         request.setNotificationVisibility(if (task.isShowNotification) DownloadManager.Request.VISIBILITY_VISIBLE else DownloadManager.Request.VISIBILITY_HIDDEN)
         request.setVisibleInDownloadsUi(task.isShowNotification)
-        val subPath: String
-        subPath = if (TextUtils.isEmpty(task.subDir)) {
+        val subPath: String = if (TextUtils.isEmpty(task.subDir)) {
             task.fileName
         } else {
             task.subDir + File.separator + task.fileName
@@ -108,7 +110,7 @@ class Downloader private constructor(private val mContext: Context) {
     private fun checkMonitorDownloadStatus() {
         backHandler.removeCallbacks(mCheckDownloadStatusRunn)
         if (tasks.isEmpty()) {
-            log.w("no download task exist, not loop check downlaod status")
+            log.w("no download task exist, not loop check download status")
         } else {
             backHandler.postDelayed(mCheckDownloadStatusRunn, 1000)
         }
@@ -153,6 +155,7 @@ class Downloader private constructor(private val mContext: Context) {
                             )
                             notifyListener(Progress(task, soFar, total))
                         }
+
                         DownloadManager.STATUS_PENDING -> {
                             log.w("download delayed:${Task.toString(mContext, task)}")
                             val soFar =
@@ -169,6 +172,7 @@ class Downloader private constructor(private val mContext: Context) {
                             )
                             notifyListener(Progress(task, soFar, total))
                         }
+
                         DownloadManager.STATUS_RUNNING -> {
                             val soFar =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
@@ -184,6 +188,7 @@ class Downloader private constructor(private val mContext: Context) {
                             )
                             notifyListener(Progress(task, soFar, total))
                         }
+
                         DownloadManager.STATUS_SUCCESSFUL -> {
                             val destinationUri = cursor.getString(
                                 cursor.getColumnIndexOrThrow(
@@ -195,6 +200,7 @@ class Downloader private constructor(private val mContext: Context) {
                             tasksSuccess.add(task)
                             notifyListener(Status.Success(task))
                         }
+
                         DownloadManager.STATUS_FAILED -> {
                             reason =
                                 cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
@@ -355,11 +361,11 @@ class Downloader private constructor(private val mContext: Context) {
     }
 
     companion object {
-        lateinit var instance: Downloader
-            private set
+
+        lateinit var downloader: Downloader
 
         fun init(context: Context) {
-            instance = Downloader(context)
+            downloader = Downloader(context)
         }
     }
 }

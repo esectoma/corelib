@@ -8,7 +8,7 @@ import kotlin.collections.ArrayList
  * Created by Bond on 2016/4/2.
  */
 abstract class ExpandableAdapter : BaseExpandableAdapter() {
-    private val mList: MutableList<Any>
+    private val mList: MutableList<Any> = ArrayList()
     var headerCount = 0
         private set
     var childCount = 0
@@ -1583,9 +1583,5 @@ abstract class ExpandableAdapter : BaseExpandableAdapter() {
 
     override fun isSameData(oldData: Any?, newData: Any?): Boolean {
         return false
-    }
-
-    init {
-        mList = ArrayList()
     }
 }
