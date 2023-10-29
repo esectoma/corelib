@@ -5,9 +5,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.ui.AppBarConfiguration
 import com.app.expandableadapterx.databinding.ActivityMainBinding
 import com.google.gson.reflect.TypeToken
-import com.nanako.log.Log
-import com.nanako.log.Log.Companion.log
-import com.nanako.util.Util
+import com.core.log.Log
+import com.core.log.Log.Companion.log
+import com.core.util.Util
 
 class MainActivity : AppCompatActivity() {
 

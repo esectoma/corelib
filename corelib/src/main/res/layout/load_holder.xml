@@ -7,7 +7,7 @@
     <data>
 
 
-        <import type="com.nanako.refreshload.RefreshLoadLayout.Load" />
+        <import type="com.core.refreshload.RefreshLoadLayout.Load" />
 
         <import type="android.view.View" />
 

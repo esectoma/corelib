@@ -7,7 +7,7 @@
     tools:context=".MainActivity"
     >
 
-    <com.nanako.titlebar.TitleBar
+    <com.core.titlebar.TitleBar
         android:id="@+id/tb1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -17,7 +17,7 @@
         app:tb_backgroupd="@color/purple_200"
         android:layout_height="wrap_content"/>
 
-    <com.nanako.titlebar.TitleBar
+    <com.core.titlebar.TitleBar
         android:id="@+id/tb2"
         app:tb_status_visible="true"
         app:tb_status_background="@color/purple_500"
@@ -29,7 +29,7 @@
         app:tb_backgroupd="@color/purple_200"
         android:layout_height="wrap_content"/>
 
-    <com.nanako.statusbar.StatusBarPlaceHolderView
+    <com.core.statusbar.StatusBarPlaceHolderView
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tb2"
