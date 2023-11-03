@@ -1,7 +1,6 @@
 package com.core.http
 
 import android.app.Application
-import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
@@ -50,7 +49,7 @@ class HttpTask(
 
     init {
         if (url == null) {
-            url = if (dynamicUrl) dynamicUrlCallback?.onGetDynamicUrl() else defaultUrl
+            url = if (dynamicUrl) dynamicUrlListener?.onGetDynamicUrl() else defaultUrl
         }
     }
 
@@ -67,11 +66,11 @@ class HttpTask(
         private lateinit var context: Application
         private lateinit var okHttpClient: OkHttpClient
         private var gson: Gson? = null
-        private var iCommonHeadersAndParameters: ICommonHeadersAndParameters? = null
-        private var iCommonErrorDeal: ICommonErrorDeal? = null
-        private lateinit var iCheckHttpResponse: ICheckHttpResponse
+        private var headerBodyListener: HeaderBodyListener? = null
+        private var errorCallback: ErrorCallback? = null
+        private lateinit var checkResponseListener: CheckResponseListener
         var realExceptionCallback: RealExceptionCallback? = null
-        var dynamicUrlCallback: DynamicUrlCallback? = null
+        var dynamicUrlListener: DynamicUrlListener? = null
         var clientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
         var defaultUrl: String? = null
         private var timeDiff: Long = 0
@@ -85,9 +84,9 @@ class HttpTask(
             isDebug: Boolean,
             context: Application,
             url: String,
-            iCommonHeadersAndParameters: ICommonHeadersAndParameters?,
-            iCommonErrorDeal: ICommonErrorDeal?,
-            iCheckHttpResponse: ICheckHttpResponse,
+            headerBodyListener: HeaderBodyListener?,
+            errorCallback: ErrorCallback?,
+            checkResponseListener: CheckResponseListener,
             certificateAssetsName: String?,
             type: Type = Type.RAW_METHOD_APPEND_URL,
             param: Param = Param()
@@ -97,9 +96,9 @@ class HttpTask(
             log.isEnabled = isDebug
             Companion.context = context
             this.defaultUrl = url
-            this.iCommonHeadersAndParameters = iCommonHeadersAndParameters
-            this.iCommonErrorDeal = iCommonErrorDeal
-            this.iCheckHttpResponse = iCheckHttpResponse
+            this.headerBodyListener = headerBodyListener
+            this.errorCallback = errorCallback
+            this.checkResponseListener = checkResponseListener
             val builder = OkHttpClient.Builder()
             val loggingInterceptor = HttpLoggingInterceptor { message -> log.jsonV(message) }
             loggingInterceptor.setLevel(if (isDebug) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE)
@@ -123,7 +122,7 @@ class HttpTask(
             }
             okHttpClient = builder.build()
             gson = Gson()
-            this.iCommonHeadersAndParameters?.init(Companion.context)
+            this.headerBodyListener?.onInit(Companion.context)
             this.type = type
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE)
             NETWORK_ERROR_CASE_LIST.add(NETWORK_ERROR_CASE_1)
@@ -203,15 +202,15 @@ class HttpTask(
 
     private fun getRequest(): Request? {
         try {
-            if (iCommonHeadersAndParameters != null && !noCommonParam) {
-                params = iCommonHeadersAndParameters!!.getParams(method, params)
+            if (headerBodyListener != null && !noCommonParam) {
+                params = headerBodyListener!!.onGetBody(method, params)
             }
             if (params == null) {
                 params = TreeMap()
             }
             val reqBuilder = Request.Builder()
-            if (iCommonHeadersAndParameters != null) {
-                val headers = iCommonHeadersAndParameters!!.getHeaders(
+            if (headerBodyListener != null) {
+                val headers = headerBodyListener!!.onGetHeaders(
                     method, params
                 )
                 this.headers = headers
@@ -329,7 +328,7 @@ class HttpTask(
     }
 
     @JvmOverloads
-    fun execute(iDataConverter: IDataConverter? = null): HttpTask {
+    fun execute(responseConvertListener: ResponseConvertListener? = null): HttpTask {
         val request = getRequest()
         if (request == null) {
             log.e("request == null")
@@ -362,20 +361,23 @@ class HttpTask(
                     }
                     if (response.isSuccessful) {
                         val responseBodyString = response.body!!.string()
-                        if (iDataConverter == null) {
-                            if (iCheckHttpResponse.isSuccess(responseBodyString)) {
+                        if (responseConvertListener == null) {
+                            if (checkResponseListener.isSuccess(responseBodyString)) {
                                 onHttpSuccess(
                                     gson!!.fromJson<Any>(responseBodyString, responseClass)
                                 )
                             } else {
                                 onHttpFailed(
-                                    iCheckHttpResponse.getCode(responseBodyString),
-                                    iCheckHttpResponse.getMessage(responseBodyString)
+                                    checkResponseListener.getCode(responseBodyString),
+                                    checkResponseListener.getMessage(responseBodyString)
                                 )
                             }
                         } else {
                             onHttpSuccess(
-                                iDataConverter.doConvert(responseBodyString, responseClass)
+                                responseConvertListener.onResponseConvert(
+                                    responseBodyString,
+                                    responseClass
+                                )
                             )
                         }
                     } else {
@@ -462,7 +464,7 @@ class HttpTask(
         }
         mainHandler.post {
             if (globalDeal) {
-                iCommonErrorDeal?.onFailed(this, code, msg)
+                errorCallback?.onFailed(this, code, msg)
             }
             beforeCallBack?.onHttpFailed(this, code, msg)
             if (weakReferenceCallback) {
@@ -472,37 +474,6 @@ class HttpTask(
             }
             afterCallBack?.onHttpFailed(this, code, msg)
         }
-    }
-
-    interface ICommonErrorDeal {
-        fun onFailed(ht: HttpTask, code: Int, msg: String?)
-    }
-
-    interface CallBack {
-        fun onHttpSuccess(ht: HttpTask, model: Any)
-        fun onHttpFailed(ht: HttpTask, code: Int, msg: String)
-    }
-
-    interface IDataConverter {
-        fun doConvert(dataStr: String?, responseCls: Class<*>?): Any
-    }
-
-    interface ICommonHeadersAndParameters {
-        fun init(context: Context)
-        fun getHeaders(method: String, params: Map<String, Any>?): Map<String, String>?
-        fun getParams(method: String, params: Map<String, Any>?): Map<String, Any>?
-    }
-
-    /*interface IHttpResponse {
-        fun onGetCode(): Int
-        fun onGetMessage(): String?
-    }*/
-
-    interface ICheckHttpResponse {
-        fun isSuccess(responseBodyString: String): Boolean
-
-        fun getCode(responseBodyString: String): Int
-        fun getMessage(responseBodyString: String): String
     }
 
     private fun getFileExtensionFromPath(path: String): String {
@@ -522,12 +493,6 @@ class HttpTask(
         return sb.toString()
     }
 
-    open class SimpleCallBack : CallBack {
-        override fun onHttpSuccess(ht: HttpTask, model: Any) {}
-        override fun onHttpFailed(ht: HttpTask, code: Int, msg: String) {}
-    }
-
-
     interface RealExceptionCallback {
         fun onHttpTaskRealException(httpTask: HttpTask, code: Int, exception: String?)
     }
@@ -536,7 +501,38 @@ class HttpTask(
         fun onClientServerTimeDiff(millisecond: Long)
     }
 
-    interface DynamicUrlCallback {
+    interface ErrorCallback {
+        fun onFailed(ht: HttpTask, code: Int, msg: String?)
+    }
+
+    interface CallBack {
+        fun onHttpSuccess(ht: HttpTask, model: Any)
+        fun onHttpFailed(ht: HttpTask, code: Int, msg: String)
+    }
+
+    open class SimpleCallBack : CallBack {
+        override fun onHttpSuccess(ht: HttpTask, model: Any) {}
+        override fun onHttpFailed(ht: HttpTask, code: Int, msg: String) {}
+    }
+
+    interface ResponseConvertListener {
+        fun onResponseConvert(dataStr: String?, responseCls: Class<*>?): Any
+    }
+
+    interface HeaderBodyListener {
+        fun onInit(context: Application)
+        fun onGetHeaders(method: String, body: Map<String, Any>?): Map<String, String>?
+        fun onGetBody(method: String, body: Map<String, Any>?): Map<String, Any>?
+    }
+
+    interface CheckResponseListener {
+        fun isSuccess(responseBodyString: String): Boolean
+
+        fun getCode(responseBodyString: String): Int
+        fun getMessage(responseBodyString: String): String
+    }
+
+    interface DynamicUrlListener {
         fun onGetDynamicUrl(): String?
     }
 
