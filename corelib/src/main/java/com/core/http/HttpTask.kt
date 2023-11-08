@@ -36,10 +36,10 @@ class HttpTask(
     var params: Map<String, Any>? = null,
     var responseClass: Class<*>? = null,
     var backParam: Any? = null,
-    var backgroundBeforeCallBack: CallBack? = null,
-    var beforeCallBack: CallBack? = null,
-    var callBack: CallBack? = null,
-    var afterCallBack: CallBack? = null,
+    var backgroundBeforeListener: Listener? = null,
+    var beforeListener: Listener? = null,
+    var listener: Listener? = null,
+    var afterListener: Listener? = null,
     var defaultFileExtension: String = "jpg",
     var globalDeal: Boolean = true,
     var noCommonParam: Boolean = false,
@@ -67,11 +67,11 @@ class HttpTask(
         private lateinit var okHttpClient: OkHttpClient
         private var gson: Gson? = null
         private var headerBodyListener: HeaderBodyListener? = null
-        private var errorCallback: ErrorCallback? = null
+        private var errorListener: ErrorListener? = null
         private lateinit var checkResponseListener: CheckResponseListener
-        var realExceptionCallback: RealExceptionCallback? = null
+        var realExceptionListener: RealExceptionListener? = null
         var dynamicUrlListener: DynamicUrlListener? = null
-        var clientServerTimeDiffCallback: ClientServerTimeDiffCallback? = null
+        var clientServerTimeDiffListener: ClientServerTimeDiffListener? = null
         var defaultUrl: String? = null
         private var timeDiff: Long = 0
         var log = Log()
@@ -85,7 +85,7 @@ class HttpTask(
             context: Application,
             url: String,
             headerBodyListener: HeaderBodyListener?,
-            errorCallback: ErrorCallback?,
+            errorListener: ErrorListener?,
             checkResponseListener: CheckResponseListener,
             certificateAssetsName: String?,
             type: Type = Type.RAW_METHOD_APPEND_URL,
@@ -97,7 +97,7 @@ class HttpTask(
             Companion.context = context
             this.defaultUrl = url
             this.headerBodyListener = headerBodyListener
-            this.errorCallback = errorCallback
+            this.errorListener = errorListener
             this.checkResponseListener = checkResponseListener
             val builder = OkHttpClient.Builder()
             val loggingInterceptor = HttpLoggingInterceptor { message -> log.jsonV(message) }
@@ -135,7 +135,7 @@ class HttpTask(
                     SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US).parse(dateStr)
                         ?.let { date ->
                             timeDiff = System.currentTimeMillis() - date.time
-                            clientServerTimeDiffCallback?.onClientServerTimeDiff(timeDiff)
+                            clientServerTimeDiffListener?.onClientServerTimeDiff(timeDiff)
                             log.v("local and server time differ [${timeDiff}]")
                         }
                 } catch (e: Exception) {
@@ -153,8 +153,8 @@ class HttpTask(
 
     private var files: Map<String, String>? = null
     private var headers: Map<String, String>? = null
-    private var wrCallBack: WeakReference<CallBack>? = null
-    private var weakReferenceCallback = false
+    private var wrListener: WeakReference<Listener>? = null
+    private var weakReferenceListener = false
     private var bodyType = BodyType.POST
     private var startTimestamp: Long = 0
 
@@ -193,10 +193,10 @@ class HttpTask(
         return this
     }
 
-    fun softRefCallback() {
-        callBack?.let {
-            wrCallBack = WeakReference(callBack)
-            callBack = null
+    fun softRefListener() {
+        listener?.let {
+            wrListener = WeakReference(listener)
+            listener = null
         }
     }
 
@@ -345,8 +345,8 @@ class HttpTask(
                 } else {
                     onHttpFailed(FAILUE, SYSTEM_ERROR)
                 }
-                if (realExceptionCallback != null) {
-                    realExceptionCallback!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
+                if (realExceptionListener != null) {
+                    realExceptionListener!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
                 }
             }
 
@@ -383,8 +383,8 @@ class HttpTask(
                     } else {
                         log.e("http error status code[${response.code}]")
                         onHttpFailed(FAILUE, SYSTEM_ERROR)
-                        if (realExceptionCallback != null) {
-                            realExceptionCallback!!.onHttpTaskRealException(
+                        if (realExceptionListener != null) {
+                            realExceptionListener!!.onHttpTaskRealException(
                                 this@HttpTask,
                                 FAILUE,
                                 response.code.toString() + "," + response.message
@@ -395,8 +395,8 @@ class HttpTask(
                     e.printStackTrace()
                     log.e(e)
                     onHttpFailed(FAILUE, SYSTEM_ERROR)
-                    if (realExceptionCallback != null) {
-                        realExceptionCallback!!.onHttpTaskRealException(
+                    if (realExceptionListener != null) {
+                        realExceptionListener!!.onHttpTaskRealException(
                             this@HttpTask, FAILUE, e.message
                         )
                     }
@@ -445,34 +445,34 @@ class HttpTask(
 
     private fun onHttpSuccess(model: Any) {
         printUrlParams()
-        backgroundBeforeCallBack?.onHttpSuccess(this, model)
+        backgroundBeforeListener?.onHttpSuccess(this, model)
         mainHandler.post {
-            beforeCallBack?.onHttpSuccess(this, model)
-            if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpSuccess(this, model)
+            beforeListener?.onHttpSuccess(this, model)
+            if (weakReferenceListener) {
+                wrListener?.get()?.onHttpSuccess(this, model)
             } else {
-                callBack?.onHttpSuccess(this, model)
+                listener?.onHttpSuccess(this, model)
             }
-            afterCallBack?.onHttpSuccess(this, model)
+            afterListener?.onHttpSuccess(this, model)
         }
     }
 
     private fun onHttpFailed(code: Int, msg: String) {
         printUrlParams()
-        if (backgroundBeforeCallBack != null) {
-            backgroundBeforeCallBack!!.onHttpFailed(this, code, msg)
+        if (backgroundBeforeListener != null) {
+            backgroundBeforeListener!!.onHttpFailed(this, code, msg)
         }
         mainHandler.post {
             if (globalDeal) {
-                errorCallback?.onFailed(this, code, msg)
+                errorListener?.onFailed(this, code, msg)
             }
-            beforeCallBack?.onHttpFailed(this, code, msg)
-            if (weakReferenceCallback) {
-                wrCallBack?.get()?.onHttpFailed(this, code, msg)
+            beforeListener?.onHttpFailed(this, code, msg)
+            if (weakReferenceListener) {
+                wrListener?.get()?.onHttpFailed(this, code, msg)
             } else {
-                callBack?.onHttpFailed(this, code, msg)
+                listener?.onHttpFailed(this, code, msg)
             }
-            afterCallBack?.onHttpFailed(this, code, msg)
+            afterListener?.onHttpFailed(this, code, msg)
         }
     }
 
@@ -493,24 +493,24 @@ class HttpTask(
         return sb.toString()
     }
 
-    interface RealExceptionCallback {
+    interface RealExceptionListener {
         fun onHttpTaskRealException(httpTask: HttpTask, code: Int, exception: String?)
     }
 
-    interface ClientServerTimeDiffCallback {
+    interface ClientServerTimeDiffListener {
         fun onClientServerTimeDiff(millisecond: Long)
     }
 
-    interface ErrorCallback {
+    interface ErrorListener {
         fun onFailed(ht: HttpTask, code: Int, msg: String?)
     }
 
-    interface CallBack {
+    interface Listener {
         fun onHttpSuccess(ht: HttpTask, model: Any)
         fun onHttpFailed(ht: HttpTask, code: Int, msg: String)
     }
 
-    open class SimpleCallBack : CallBack {
+    open class SimpleListener : Listener {
         override fun onHttpSuccess(ht: HttpTask, model: Any) {}
         override fun onHttpFailed(ht: HttpTask, code: Int, msg: String) {}
     }
