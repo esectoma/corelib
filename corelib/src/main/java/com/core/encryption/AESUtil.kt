@@ -76,7 +76,7 @@ object AESUtil {
             val cipher = Cipher.getInstance(CipherMode.AES_CBC_PKCS5Padding)
             cipher.init(
                 if (isEncrypt) Cipher.ENCRYPT_MODE else Cipher.DECRYPT_MODE, key, IvParameterSpec(
-                    /*getRawKey(secretLen, secretSeed)*/secretSeed
+                    "Xegh5pNZq0tTobQR".toByteArray()
                 )
             ) //IvParameterSpec增加加密算法的强度
             result = if (isEncrypt) {

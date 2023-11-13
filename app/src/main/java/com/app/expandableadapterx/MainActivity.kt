@@ -45,5 +45,13 @@ class MainActivity : AppCompatActivity() {
         log.e(e)
         val d = AESUtil.decryptBase64(pwd, e)
         log.e(d)
+
+
+        log.e("------------------")
+        val pwd2 = "123456789012345678901234"
+        val e2 = AESUtil.encryptBase64(pwd2, "hello aes")
+        log.e(e2)
+        val d2 = AESUtil.decryptBase64(pwd2, e2)
+        log.e(d2)
     }
 }
