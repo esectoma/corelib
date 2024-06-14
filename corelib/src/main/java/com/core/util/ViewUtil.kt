@@ -21,13 +21,13 @@ object ViewUtil {
         targetText2: String,
         targetTextColor2: Int,
         targetTextSize2: Float,
-        bgColor:Int,
         targetText1Click: View.OnClickListener? = null,
         targetText2Click: View.OnClickListener? = null
     ) {
         if (TextUtils.isEmpty(fullText)) {
             return
         }
+        textView.highlightColor = 0x00000000
         val ss = SpannableString(fullText)
         if (!TextUtils.isEmpty(targetText1)) {
             val i = fullText.indexOf(targetText1)
@@ -44,7 +44,7 @@ object ViewUtil {
                         }
 
                         override fun updateDrawState(ds: TextPaint) {
-                            ds.bgColor = bgColor
+                            ds.bgColor = 0x00000000
                             ds.isUnderlineText = false
                         }
                     }
@@ -67,7 +67,7 @@ object ViewUtil {
                         }
 
                         override fun updateDrawState(ds: TextPaint) {
-                            ds.bgColor = bgColor
+                            ds.bgColor = 0x00000000
                             ds.isUnderlineText = false
                         }
                     }
