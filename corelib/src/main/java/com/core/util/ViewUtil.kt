@@ -17,10 +17,10 @@ object ViewUtil {
         fullText: String,
         targetText1: String,
         targetTextColor1: Int,
-        targetTextSize1: Float,
-        targetText2: String,
-        targetTextColor2: Int,
-        targetTextSize2: Float,
+        targetTextSize1: Float? = null,
+        targetText2: String? = null,
+        targetTextColor2: Int? = null,
+        targetTextSize2: Float? = null,
         targetText1Click: View.OnClickListener? = null,
         targetText2Click: View.OnClickListener? = null
     ) {
@@ -35,8 +35,10 @@ object ViewUtil {
                 val colorSpan = ForegroundColorSpan(targetTextColor1)
                 val end = i + targetText1.length
                 ss.setSpan(colorSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-                val sizeSpan = AbsoluteSizeSpan(targetTextSize1.toInt())
-                ss.setSpan(sizeSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                targetTextSize1?.let {
+                    val sizeSpan = AbsoluteSizeSpan(targetTextSize1.toInt())
+                    ss.setSpan(sizeSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                }
                 targetText1Click?.let {
                     val clickSpan = object : ClickableSpan() {
                         override fun onClick(widget: View) {
@@ -53,13 +55,17 @@ object ViewUtil {
             }
         }
         if (!TextUtils.isEmpty(targetText2)) {
-            val i = fullText.indexOf(targetText2)
+            val i = fullText.indexOf(targetText2!!)
             if (i != -1) {
-                val colorSpan = ForegroundColorSpan(targetTextColor2)
                 val end = i + targetText2.length
-                ss.setSpan(colorSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
-                val sizeSpan = AbsoluteSizeSpan(targetTextSize2.toInt())
-                ss.setSpan(sizeSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                targetTextColor2?.let {
+                    val colorSpan = ForegroundColorSpan(targetTextColor2)
+                    ss.setSpan(colorSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                }
+                targetTextSize2?.let {
+                    val sizeSpan = AbsoluteSizeSpan(targetTextSize2.toInt())
+                    ss.setSpan(sizeSpan, i, end, Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+                }
                 targetText2Click?.let {
                     val clickSpan = object : ClickableSpan() {
                         override fun onClick(widget: View) {
