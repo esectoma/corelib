@@ -193,7 +193,7 @@ class HttpTask(
         return this
     }
 
-    fun softRefListener() {
+    fun weakRefListener() {
         listener?.let {
             wrListener = WeakReference(listener)
             listener = null
