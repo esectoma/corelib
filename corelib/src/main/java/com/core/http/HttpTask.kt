@@ -22,13 +22,13 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.File
 import java.io.IOException
-import java.lang.Exception
 import java.lang.RuntimeException
 import java.lang.StringBuilder
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.Exception
 
 class HttpTask(
     var url: String? = null,
@@ -327,6 +327,21 @@ class HttpTask(
         return "{}"
     }
 
+    fun executeSync(responseConvertListener: ResponseConvertListener? = null): Any? {
+        return getRequest()?.let {
+            try {
+                startTimestamp = System.currentTimeMillis()
+                handleResponse(responseConvertListener, okHttpClient.newCall(it).execute())
+            } catch (e: IOException) {
+                handleException(e)
+                null
+            }
+        } ?: run {
+            log.e("request == null")
+            null
+        }
+    }
+
     @JvmOverloads
     fun execute(responseConvertListener: ResponseConvertListener? = null): HttpTask {
         val request = getRequest()
@@ -337,82 +352,88 @@ class HttpTask(
         startTimestamp = System.currentTimeMillis()
         okHttpClient.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-                log.e(e)
-                val msg = e.message
-                if (!TextUtils.isEmpty(msg) && isNetworkError(msg)) {
-                    onHttpFailed(NETWORK_INVALID, NETWORK_ERROR)
-                } else {
-                    onHttpFailed(FAILUE, SYSTEM_ERROR)
-                }
-                if (realExceptionListener != null) {
-                    realExceptionListener!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
-                }
+                handleException(e)
             }
 
             override fun onResponse(call: Call, response: Response) {
-                try {
-                    calculateTimeDiff(response)
-                    if (responseClass != null) {
-                        log.v("response[${responseClass?.name}]")
-                    }
-                    if (HttpTask.responseClass != null) {
-                        log.v("sResponse[${HttpTask.responseClass?.name}]")
-                    }
-                    if (response.isSuccessful) {
-                        val responseBodyString = response.body!!.string()
-                        if (responseConvertListener == null) {
-                            if (checkResponseListener.isSuccess(responseBodyString)) {
-                                onHttpSuccess(
-                                    gson!!.fromJson<Any>(responseBodyString, responseClass)
-                                )
-                            } else {
-                                onHttpFailed(
-                                    checkResponseListener.getCode(responseBodyString),
-                                    checkResponseListener.getMessage(responseBodyString)
-                                )
-                            }
-                        } else {
-                            onHttpSuccess(
-                                responseConvertListener.onResponseConvert(
-                                    responseBodyString,
-                                    responseClass
-                                )
-                            )
-                        }
-                    } else {
-                        log.e("http error status code[${response.code}]")
-                        onHttpFailed(FAILUE, SYSTEM_ERROR)
-                        if (realExceptionListener != null) {
-                            realExceptionListener!!.onHttpTaskRealException(
-                                this@HttpTask,
-                                FAILUE,
-                                response.code.toString() + "," + response.message
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    log.e(e)
-                    onHttpFailed(FAILUE, SYSTEM_ERROR)
-                    if (realExceptionListener != null) {
-                        realExceptionListener!!.onHttpTaskRealException(
-                            this@HttpTask, FAILUE, e.message
-                        )
-                    }
-                } finally {
-                    response.close()
-                    val currTimestamp = System.currentTimeMillis()
-                    val diff = currTimestamp - startTimestamp
-                    if (diff > 2000) {
-                        log.w(method + "," + formatApiTime(diff))
-                    } else {
-                        log.i(method + "," + formatApiTime(diff))
-                    }
-                }
+                handleResponse(responseConvertListener, response)
             }
         })
         return this
+    }
+
+    private fun handleException(e: IOException) {
+        e.printStackTrace()
+        log.e(e)
+        val msg = e.message
+        if (!TextUtils.isEmpty(msg) && isNetworkError(msg)) {
+            onHttpFailed(NETWORK_INVALID, NETWORK_ERROR)
+        } else {
+            onHttpFailed(FAILUE, SYSTEM_ERROR)
+        }
+        if (realExceptionListener != null) {
+            realExceptionListener!!.onHttpTaskRealException(this@HttpTask, FAILUE, msg)
+        }
+    }
+
+    private fun handleResponse(
+        responseConvertListener: ResponseConvertListener?, response: Response
+    ): Any? {
+        var model: Any? = null
+        try {
+            calculateTimeDiff(response)
+            if (responseClass != null) {
+                log.v("response[${responseClass?.name}]")
+            }
+            if (HttpTask.responseClass != null) {
+                log.v("sResponse[${HttpTask.responseClass?.name}]")
+            }
+            if (response.isSuccessful) {
+                val responseBodyString = response.body!!.string()
+                if (responseConvertListener == null) {
+                    if (checkResponseListener.isSuccess(responseBodyString)) {
+                        onHttpSuccess(gson!!.fromJson<Any>(responseBodyString, responseClass)
+                            .let { model = it })
+                    } else {
+                        onHttpFailed(
+                            checkResponseListener.getCode(responseBodyString),
+                            checkResponseListener.getMessage(responseBodyString)
+                        )
+                    }
+                } else {
+                    onHttpSuccess(responseConvertListener.onResponseConvert(
+                        responseBodyString, responseClass
+                    ).let { model = it })
+                }
+            } else {
+                log.e("http error status code[${response.code}]")
+                onHttpFailed(FAILUE, SYSTEM_ERROR)
+                if (realExceptionListener != null) {
+                    realExceptionListener!!.onHttpTaskRealException(
+                        this@HttpTask, FAILUE, response.code.toString() + "," + response.message
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            log.e(e)
+            onHttpFailed(FAILUE, SYSTEM_ERROR)
+            if (realExceptionListener != null) {
+                realExceptionListener!!.onHttpTaskRealException(
+                    this@HttpTask, FAILUE, e.message
+                )
+            }
+        } finally {
+            response.close()
+            val currTimestamp = System.currentTimeMillis()
+            val diff = currTimestamp - startTimestamp
+            if (diff > 2000) {
+                log.w(method + "," + formatApiTime(diff))
+            } else {
+                log.i(method + "," + formatApiTime(diff))
+            }
+        }
+        return model
     }
 
     private fun isNetworkError(message: String?): Boolean {
