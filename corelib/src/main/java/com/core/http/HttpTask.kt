@@ -393,7 +393,7 @@ class HttpTask(
                 if (responseConvertListener == null) {
                     if (checkResponseListener.isSuccess(responseBodyString)) {
                         onHttpSuccess(gson!!.fromJson<Any>(responseBodyString, responseClass)
-                            .let { model = it })
+                            .also { model = it })
                     } else {
                         onHttpFailed(
                             checkResponseListener.getCode(responseBodyString),
@@ -403,7 +403,7 @@ class HttpTask(
                 } else {
                     onHttpSuccess(responseConvertListener.onResponseConvert(
                         responseBodyString, responseClass
-                    ).let { model = it })
+                    ).also { model = it })
                 }
             } else {
                 log.e("http error status code[${response.code}]")
