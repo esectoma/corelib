@@ -1,6 +1,8 @@
 package com.core.http
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
@@ -20,8 +22,11 @@ import com.google.gson.Gson
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
 import java.lang.RuntimeException
 import java.lang.StringBuilder
 import java.lang.ref.WeakReference
@@ -152,6 +157,7 @@ class HttpTask(
 
 
     private var files: Map<String, String>? = null
+    private var fileByteArrays: MutableList<ByteArray>? = null
     private var headers: Map<String, String>? = null
     private var wrListener: WeakReference<Listener>? = null
     private var weakReferenceListener = false
@@ -186,9 +192,20 @@ class HttpTask(
         return this
     }
 
-    fun upload(files: Map<String, String>?): HttpTask {
+    fun upload(
+        files: Map<String, String>?,
+        fileByteArrays: MutableList<ByteArray>? = null,
+        uris: List<Uri>? = null
+    ): HttpTask {
         bodyType = BodyType.UPLOAD
         this.files = files
+        this.fileByteArrays = fileByteArrays
+        if (uris?.isNotEmpty() == true) {
+            this.fileByteArrays = fileByteArrays ?: mutableListOf()
+            for (uri in uris) {
+                this.fileByteArrays?.add(readLargeFileFromUri(context, uri))
+            }
+        }
         noCommonParam = true
         return this
     }
@@ -224,43 +241,41 @@ class HttpTask(
                 val bodyBuilder: MultipartBody.Builder = MultipartBody.Builder().setType(
                     MultipartBody.FORM
                 )
-                if (files == null || files!!.isEmpty()) {
-                    log.e("no file!")
-                    return null
-                }
-                var file: File
-                val params = files!!.entries.iterator()
-                var param: Map.Entry<String, String>
-                var filePath: String
-                while (params.hasNext()) {
-                    param = params.next()
-                    filePath = param.value
-                    file = File(filePath)
-                    if (!file.exists()) {
-                        log.w("file[$filePath] not exist")
-                        continue
-                    }
-                    val key = param.key
-                    var fileExtension = getFileExtensionFromPath(filePath)
-                    var mineType = getMimeTypeFromExtension(fileExtension)
-                    var fileName: String
-                    if (!TextUtils.isEmpty(mineType)) {
-                        fileName = "$key.$fileExtension"
-                    } else {
-                        fileExtension = defaultFileExtension
-                        mineType = getMimeTypeFromExtension(fileExtension)
-                        fileName = "$key.$fileExtension"
-                    }
-                    log.d("add upload file[$key], key,fileName[$fileName],fileExtension[$fileExtension],mineType[$mineType]")
-                    bodyBuilder.addFormDataPart(
-                        key, fileName, RequestBody.create(
-                            mineType?.toMediaTypeOrNull(), file
+                files?.let {
+                    for ((k, v) in it) {
+                        var fileExtension = getFileExtensionFromPath(v)
+                        var mineType = getMimeTypeFromExtension(fileExtension)
+                        var fileName: String
+                        if (mineType?.isNotEmpty() == true) {
+                            fileName = "$k.$fileExtension"
+                        } else {
+                            fileExtension = defaultFileExtension
+                            mineType = getMimeTypeFromExtension(fileExtension)
+                            fileName = "$k.$fileExtension"
+                        }
+                        log.d("add upload file[$k], key,fileName[$fileName],fileExtension[$fileExtension],mineType[$mineType]")
+                        bodyBuilder.addFormDataPart(
+                            k, fileName, RequestBody.create(
+                                mineType?.toMediaTypeOrNull(), File(v)
+                            )
                         )
-                    )
+                    }
                 }
-                val entrySet: Set<Map.Entry<String?, Any?>> = this.params!!.entries
-                for ((key, value) in entrySet) {
-                    bodyBuilder.addFormDataPart(key!!, value.toString())
+                fileByteArrays?.let {
+                    for (e in it) {
+                        val name = System.currentTimeMillis().toString()
+                        val fileName = "$name.$defaultFileExtension"
+                        val mineType = getMimeTypeFromExtension(defaultFileExtension)
+                        log.d("add upload file bytes[$name], key,fileName[$fileName],fileExtension[$defaultFileExtension],mineType[$mineType]")
+                        bodyBuilder.addFormDataPart(
+                            name, fileName, e.toRequestBody(mineType?.toMediaTypeOrNull())
+                        )
+                    }
+                }
+                params?.let {
+                    for ((k, v) in it) {
+                        bodyBuilder.addFormDataPart(k, v.toString())
+                    }
                 }
                 val url = fullUrl()
                 reqBuilder.url(url!!).post(bodyBuilder.build())
@@ -562,4 +577,19 @@ class HttpTask(
         var mReadTimeout = 30
         var mWriteTimeout = 30
     }
+
+    fun readLargeFileFromUri(context: Context, uri: Uri): ByteArray {
+        val inputStream: InputStream = context.contentResolver.openInputStream(uri)
+            ?: throw IOException("Failed to open input stream from Uri: $uri")
+        val buffer = ByteArray(1024)  // 设置缓冲区
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        inputStream.use { input ->
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead)
+            }
+        }
+        return byteArrayOutputStream.toByteArray()
+    }
+
 }
