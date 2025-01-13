@@ -268,7 +268,9 @@ class HttpTask(
                         val mineType = getMimeTypeFromExtension(defaultFileExtension)
                         log.d("add upload file bytes[$name], key,fileName[$fileName],fileExtension[$defaultFileExtension],mineType[$mineType]")
                         bodyBuilder.addFormDataPart(
-                            name, fileName, e.toRequestBody(mineType?.toMediaTypeOrNull())
+                            name,
+                            fileName,
+                            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), e)
                         )
                     }
                 }
@@ -578,7 +580,7 @@ class HttpTask(
         var mWriteTimeout = 30
     }
 
-    fun readLargeFileFromUri(context: Context, uri: Uri): ByteArray {
+    private fun readLargeFileFromUri(context: Context, uri: Uri): ByteArray {
         val inputStream: InputStream = context.contentResolver.openInputStream(uri)
             ?: throw IOException("Failed to open input stream from Uri: $uri")
         val buffer = ByteArray(1024)  // 设置缓冲区
