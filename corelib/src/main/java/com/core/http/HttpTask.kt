@@ -268,7 +268,7 @@ class HttpTask(
                         val mineType = getMimeTypeFromExtension(defaultFileExtension)
                         log.d("add upload file bytes[$name], key,fileName[$fileName],fileExtension[$defaultFileExtension],mineType[$mineType]")
                         bodyBuilder.addFormDataPart(
-                            name,
+                            "file",//服务端接收的字段名
                             fileName,
                             RequestBody.create("application/octet-stream".toMediaTypeOrNull(), e)
                         )
