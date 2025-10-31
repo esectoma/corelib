@@ -41,17 +41,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun testCrypt() {
         val pwd = "1234567890123456"
-        val e = AESUtil.encryptBase64(pwd, "31b6d9135b8053b367e72f03439e4e0757e8ffd8a06b3f7f57f02e1e35e6c889")
+        val e = AESUtil.encryptBase64(pwd, "31b6d9135b8053b367e72f03439e4e0757e8ffd8a06b3f7f57f02e1e35e6c889",null)
         log.e(e)
-        val d = AESUtil.decryptBase64(pwd, e)
+        val d = AESUtil.decryptBase64(pwd, e,null)
         log.e(d)
 
 
         log.e("------------------")
         val pwd2 = "123456789012345678901234"
-        val e2 = AESUtil.encryptBase64(pwd2, "hello aes")
+        val e2 = AESUtil.encryptBase64(pwd2, "hello aes","1234567890123456".toByteArray())
         log.e(e2)
-        val d2 = AESUtil.decryptBase64(pwd2, e2)
+        val d2 = AESUtil.decryptBase64(pwd2, e2,"1234567890123456".toByteArray())
         log.e(d2)
     }
 }

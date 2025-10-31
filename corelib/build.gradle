@@ -18,7 +18,7 @@ android {
     defaultConfig {
         minSdk rootProject.ext.min_sdk_version
         targetSdk rootProject.ext.max_sdk_version
-        versionName "2.1.11"
+        versionName "2.1.12"
         consumerProguardFiles "consumer-rules.pro"
     }
 

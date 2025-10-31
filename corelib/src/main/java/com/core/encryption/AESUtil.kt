@@ -16,7 +16,7 @@ import javax.crypto.spec.SecretKeySpec
  */
 object AESUtil {
 
-    fun encryptBase64(secretSeed: String, content: String): String {
+    fun encryptBase64(secretSeed: String, content: String, iv: ByteArray?): String {
         var sen = ""
         try {
             sen = String(
@@ -27,7 +27,7 @@ object AESUtil {
                             charset(
                                 Constant.Charset.UTF_8
                             )
-                        )
+                        ), iv
                     )
                 ), Charset.forName(Constant.Charset.UTF_8)
             )
@@ -37,7 +37,7 @@ object AESUtil {
         return sen
     }
 
-    fun decryptBase64(secretSeed: String, contentBase64: String): String {
+    fun decryptBase64(secretSeed: String, contentBase64: String, iv: ByteArray?): String {
         var den = ""
         try {
             den = String(
@@ -48,7 +48,7 @@ object AESUtil {
                                 Constant.Charset.UTF_8
                             )
                         )
-                    )
+                    ), iv
                 )!!, Charset.forName(Constant.Charset.UTF_8)
             )
         } catch (e: UnsupportedEncodingException) {
@@ -57,26 +57,28 @@ object AESUtil {
         return den
     }
 
-    fun encrypt(secretSeed: ByteArray, content: ByteArray?): ByteArray? {
-        return work(true, secretSeed, content)
+    fun encrypt(secretSeed: ByteArray, content: ByteArray?, iv: ByteArray?): ByteArray? {
+        return work(true, secretSeed, content, iv)
     }
 
-    fun decrypt(secretSeed: ByteArray, content: ByteArray?): ByteArray? {
-        return work(false, secretSeed, content)
+    fun decrypt(secretSeed: ByteArray, content: ByteArray?, iv: ByteArray?): ByteArray? {
+        return work(false, secretSeed, content, iv)
     }
 
     private fun work(
         isEncrypt: Boolean,
         secretSeed: ByteArray,
-        todoContent: ByteArray?
+        todoContent: ByteArray?,
+        iv: ByteArray?
     ): ByteArray? {
         var result: ByteArray? = null
         try {
             val key = SecretKeySpec(secretSeed, Constant.Algorithm.AES)
             val cipher = Cipher.getInstance(CipherMode.AES_CBC_PKCS5Padding)
+            val params = iv ?: "Xegh5pNZq0tTobQR".toByteArray()
             cipher.init(
                 if (isEncrypt) Cipher.ENCRYPT_MODE else Cipher.DECRYPT_MODE, key, IvParameterSpec(
-                    "Xegh5pNZq0tTobQR".toByteArray()
+                    params
                 )
             ) //IvParameterSpec增加加密算法的强度
             result = if (isEncrypt) {
